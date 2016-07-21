@@ -124,6 +124,15 @@ const config = {
     ],
   },
 
+  resolve: {
+    extensions: ['', '.js'],
+    root: path.resolve(__dirname),
+    alias: {
+      constants: 'src/constants',
+      lib: 'src/lib'
+    }
+  },
+
   // The list of plugins for PostCSS
   // https://github.com/postcss/postcss
   postcss(bundler) {
