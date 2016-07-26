@@ -78,7 +78,7 @@ tasks.set('bundle', () => {
 // -----------------------------------------------------------------------------
 tasks.set('copy', () => {
   // Each target could be a file or directory
-  const targets = ['favicon.ico', 'ga'];
+  const targets = ['favicon.ico'];
   targets.forEach((target) => {
     cp('-R', `public/${target}`, `public/dist`);
     console.log(`File/Directory "${target}" is copied`);

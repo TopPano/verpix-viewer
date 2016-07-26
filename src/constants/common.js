@@ -3,4 +3,5 @@ export const DIRECTION = {
   VERTICAL: 'vertical',
 };
 
-export const STEP_DISTANCE = 5;
+export const PIXEL_STEP_DISTANCE = 5;
+export const ROTATION_RANGE = 50;

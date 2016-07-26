@@ -2,11 +2,11 @@ import fill from 'lodash/fill';
 import isFunction from 'lodash/isFunction';
 import inRange from 'lodash/inRange';
 
-import { DIRECTION, STEP_DISTANCE } from 'constants/common';
+import { DIRECTION, PIXEL_STEP_DISTANCE, ROTATION_RANGE } from 'constants/common';
 import EVENTS from 'constants/events';
 import { isMobile } from 'lib/devices';
 import { getPosition, getX, getY } from 'lib/events/click';
-
+import Gyro from './Gyro';
 
 export default class LivePhotoPlayer {
   constructor(params) {
@@ -19,7 +19,8 @@ export default class LivePhotoPlayer {
     // Writable member variables
     this.photos = fill(Array(this.numPhotos), null);
     this.curPhoto = Math.round(this.numPhotos / 2);
-    this.lastPosition = null;
+    this.lastPixel = null;
+    this.lastRotation = null;
   }
 
   start() {
@@ -84,6 +85,9 @@ export default class LivePhotoPlayer {
     this.renderPhoto(startIndex);
     this.container.addEventListener(EVENTS.CLICK_START, this.handleTransitionStart);
     this.container.addEventListener(EVENTS.CLICK_MOVE, this.handleTransitionMove);
+    if (isMobile()) {
+      new Gyro(this.onRotation).start();
+    }
   }
 
   renderPhoto(index) {
@@ -91,38 +95,56 @@ export default class LivePhotoPlayer {
     const ctx = container.getContext('2d');
     const img = this.photos[index];
     ctx.drawImage(img, 0, 0, container.width, container.height);
+    console.log(index);
+  }
+
+  renderPhotoByDelta(delta) {
+    let newCurPhoto = this.curPhoto + delta;
+
+    if (delta < 0 && newCurPhoto < 0) {
+      newCurPhoto = 0;
+    } else if (delta > 0 && newCurPhoto >= this.numPhotos) {
+      newCurPhoto = this.numPhotos - 1;
+    }
+    if (this.photos[newCurPhoto]) {
+      this.curPhoto = newCurPhoto;
+      this.renderPhoto(newCurPhoto);
+    }
+  }
+
+  onRotation = (rotation) => {
+    if (rotation && this.lastRotation) {
+      const rotationDelta =
+          this.direction === DIRECTION.HORIZONTAL ?
+          rotation.x - this.lastRotation.x :
+          rotation.y - this.lastRotation.y;
+      const indexDelta = Math.round(this.numPhotos * (rotationDelta / ROTATION_RANGE));
+      this.renderPhotoByDelta(indexDelta);
+    }
+    this.lastRotation = rotation;
   }
 
   handleTransitionStart = (e) => {
     if (this.isLeftBtnPressed(e)) {
-      this.lastPosition = getPosition(e);
+      this.lastPixel = getPosition(e);
     }
   }
 
   handleTransitionMove = (e) => {
     // Left button is clicked.
     if (this.isLeftBtnPressed(e)) {
-      const lastPosition = this.lastPosition;
+      const lastPixel = this.lastPixel;
       const curX = getX(e);
       const curY = getY(e);
-      if (lastPosition) {
-        const delta =
+      if (lastPixel) {
+        const pixelDelta =
             this.direction === DIRECTION.HORIZONTAL ?
-            curX - lastPosition.x :
-            curY - lastPosition.y;
-        let newCurPhoto = this.curPhoto + Math.round(delta / STEP_DISTANCE);
-
-        if (delta < 0 && newCurPhoto < 0) {
-          newCurPhoto = 0;
-        } else if (delta > 0 && newCurPhoto >= this.numPhotos) {
-          newCurPhoto = this.numPhotos - 1;
-        }
-        if (this.photos[newCurPhoto]) {
-          this.curPhoto = newCurPhoto;
-          this.renderPhoto(newCurPhoto);
-        }
+            curX - lastPixel.x :
+            curY - lastPixel.y;
+        const indexDelta = Math.round(pixelDelta / PIXEL_STEP_DISTANCE);
+        this.renderPhotoByDelta(indexDelta);
       }
-      this.lastPosition = { x: curX, y: curY };
+      this.lastPixel = { x: curX, y: curY };
     }
   }
 
