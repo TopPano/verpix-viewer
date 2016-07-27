@@ -95,7 +95,6 @@ export default class LivePhotoPlayer {
     const ctx = container.getContext('2d');
     const img = this.photos[index];
     ctx.drawImage(img, 0, 0, container.width, container.height);
-    console.log(index);
   }
 
   renderPhotoByDelta(delta) {
