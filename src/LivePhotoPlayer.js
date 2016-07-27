@@ -1,3 +1,5 @@
+/* eslint-disable no-loop-func */
+
 import fill from 'lodash/fill';
 import isFunction from 'lodash/isFunction';
 import inRange from 'lodash/inRange';
@@ -16,6 +18,7 @@ export default class LivePhotoPlayer {
     this.photosSrcUrl = params.photosSrcUrl;
     this.numPhotos = this.photosSrcUrl.length;
     this.direction = params.dimension.direction;
+    this.playThreshold = this.numPhotos * LIVEPHOTO_DEFAULT.PLAY_THRESHOLD;
     this.pixelStepDistance =
       this.direction === DIRECTION.HORIZONTAL ?
       (params.dimension.width * LIVEPHOTO_DEFAULT.SWIPE_RANGE) / this.numPhotos :
@@ -23,6 +26,8 @@ export default class LivePhotoPlayer {
 
     // Writable member variables
     this.photos = fill(Array(this.numPhotos), null);
+    this.numLoadedPhotos = 0;
+    this.isPlayerEnabled = false;
     this.curPhoto = -1;
     this.lastPixel = null;
     this.lastRotation = null;
@@ -30,9 +35,10 @@ export default class LivePhotoPlayer {
 
   start() {
     const startIndex = Math.round(this.numPhotos / 2);
-    this.loadPhoto(startIndex, this.startAnimation.bind(this, startIndex));
-    this.loadPhotos(startIndex - 1, -1, -500);
-    this.loadPhotos(startIndex + 1, this.numPhotos, 500);
+    const loadStep = Math.round(LIVEPHOTO_DEFAULT.CONCURRENT_LOADING_PHOTOS / 2);
+    this.loadPhoto(startIndex, this.renderPhoto.bind(this, startIndex));
+    this.loadPhotos(startIndex - 1, -1, -loadStep);
+    this.loadPhotos(startIndex + 1, this.numPhotos, loadStep);
   }
 
   loadPhoto(index, callback) {
@@ -40,6 +46,11 @@ export default class LivePhotoPlayer {
     img.src = this.getPhotoSrc(index);
     img.onload = () => {
       this.photos[index] = img;
+      this.numLoadedPhotos++;
+      if (!this.isPlayerEnabled && this.numLoadedPhotos >= this.playThreshold) {
+        this.isPlayerEnabled = true;
+        this.startPlay();
+      }
       if (callback && isFunction(callback)) {
         callback();
       }
@@ -50,7 +61,6 @@ export default class LivePhotoPlayer {
     if (step > 0 && start < end) {
       let curIndex = start;
       for (;(curIndex < start + step) && (curIndex < end); curIndex++) {
-        /*
         const callback = () => {
           if (curIndex < end) {
             this.loadPhoto(curIndex, callback);
@@ -58,13 +68,10 @@ export default class LivePhotoPlayer {
           curIndex++;
         };
         this.loadPhoto(curIndex, callback);
-        */
-        this.loadPhoto(curIndex);
       }
     } else if (step < 0 && start > end) {
       let curIndex = start;
       for (;(curIndex > start + step) && (curIndex > end); curIndex--) {
-        /*
         const callback = () => {
           if (curIndex > end) {
             this.loadPhoto(curIndex, callback);
@@ -72,8 +79,6 @@ export default class LivePhotoPlayer {
           curIndex--;
         };
         this.loadPhoto(curIndex, callback);
-        */
-        this.loadPhoto(curIndex);
       }
     }
   }
@@ -86,12 +91,13 @@ export default class LivePhotoPlayer {
     );
   }
 
-  startAnimation(startIndex) {
-    this.renderPhoto(startIndex);
-    this.container.addEventListener(EVENTS.CLICK_START, this.handleTransitionStart);
-    this.container.addEventListener(EVENTS.CLICK_MOVE, this.handleTransitionMove);
-    if (isMobile()) {
-      new Gyro(this.onRotation).start();
+  startPlay() {
+    if (this.isPlayerEnabled) {
+      this.container.addEventListener(EVENTS.CLICK_START, this.handleTransitionStart);
+      this.container.addEventListener(EVENTS.CLICK_MOVE, this.handleTransitionMove);
+      if (isMobile()) {
+        new Gyro(this.onRotation).start();
+      }
     }
   }
 
