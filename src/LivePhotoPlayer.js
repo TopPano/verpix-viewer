@@ -2,7 +2,8 @@ import fill from 'lodash/fill';
 import isFunction from 'lodash/isFunction';
 import inRange from 'lodash/inRange';
 
-import { DIRECTION, PIXEL_STEP_DISTANCE, ROTATION_RANGE } from 'constants/common';
+import { DIRECTION } from 'constants/common';
+import LIVEPHOTO_DEFAULT from 'constants/livephoto';
 import EVENTS from 'constants/events';
 import { isMobile } from 'lib/devices';
 import { getPosition, getX, getY } from 'lib/events/click';
@@ -15,6 +16,10 @@ export default class LivePhotoPlayer {
     this.photosSrcUrl = params.photosSrcUrl;
     this.numPhotos = this.photosSrcUrl.length;
     this.direction = params.dimension.direction;
+    this.pixelStepDistance =
+      this.direction === DIRECTION.HORIZONTAL ?
+      (params.dimension.width * LIVEPHOTO_DEFAULT.SWIPE_RANGE) / this.numPhotos :
+      (params.dimension.height * LIVEPHOTO_DEFAULT.SWIPE_RANGE) / this.numPhotos;
 
     // Writable member variables
     this.photos = fill(Array(this.numPhotos), null);
@@ -114,11 +119,14 @@ export default class LivePhotoPlayer {
   onRotation = (rotation) => {
     if (rotation && this.lastRotation) {
       const rotationDelta =
-          this.direction === DIRECTION.HORIZONTAL ?
-          rotation.x - this.lastRotation.x :
-          rotation.y - this.lastRotation.y;
-      const indexDelta = Math.round(this.numPhotos * (rotationDelta / ROTATION_RANGE));
-      this.renderPhotoByDelta(indexDelta);
+        this.direction === DIRECTION.HORIZONTAL ?
+        rotation.x - this.lastRotation.x :
+        rotation.y - this.lastRotation.y;
+      const indexDelta =
+        Math.round(this.numPhotos * (rotationDelta / LIVEPHOTO_DEFAULT.ROTATION_RANGE));
+      if (indexDelta !== 0) {
+        this.renderPhotoByDelta(indexDelta);
+      }
     }
     this.lastRotation = rotation;
   }
@@ -138,9 +146,9 @@ export default class LivePhotoPlayer {
       if (lastPixel) {
         const pixelDelta =
             this.direction === DIRECTION.HORIZONTAL ?
-            curX - lastPixel.x :
-            curY - lastPixel.y;
-        const indexDelta = Math.round(pixelDelta / PIXEL_STEP_DISTANCE);
+          curX - lastPixel.x :
+          curY - lastPixel.y;
+        const indexDelta = Math.round(pixelDelta / this.pixelStepDistance);
         this.renderPhotoByDelta(indexDelta);
       }
       this.lastPixel = { x: curX, y: curY };

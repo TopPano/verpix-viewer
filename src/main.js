@@ -3,15 +3,16 @@ import getPost from './getPost';
 import LivePhotoPlayer from './LivePhotoPlayer';
 import optimizeMobile from './optimizeMobile';
 
-const POST_URL = 'https://www.verpix.me/api/posts/aac3119529d54400';
-const width = 480;
-const height = 640;
+const POST_URL = 'https://www.verpix.me/api/posts/ab13a2d1cc38c000';
 
 window.onload = () => {
   optimizeMobile();
 
   getPost(POST_URL).then((post) => {
+    const width = post.dimension.width;
+    const height = post.dimension.height;
     const container = createCanvas(width, height);
+
     new LivePhotoPlayer({
       container,
       photosSrcUrl: post.media.srcHighImages,

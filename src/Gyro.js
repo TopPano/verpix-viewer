@@ -57,7 +57,6 @@ export default class Gyro {
     }
 
     if (isPortrait !== this.isPortrait) {
-      console.log('yoyyoyyo');
       this.isPortrait = isPortrait;
       this.needResetRotation = true;
       setTimeout(() => {
