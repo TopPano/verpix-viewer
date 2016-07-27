@@ -18,13 +18,13 @@ export default class LivePhotoPlayer {
 
     // Writable member variables
     this.photos = fill(Array(this.numPhotos), null);
-    this.curPhoto = Math.round(this.numPhotos / 2);
+    this.curPhoto = -1;
     this.lastPixel = null;
     this.lastRotation = null;
   }
 
   start() {
-    const startIndex = this.curPhoto;
+    const startIndex = Math.round(this.numPhotos / 2);
     this.loadPhoto(startIndex, this.startAnimation.bind(this, startIndex));
     this.loadPhotos(startIndex - 1, -1, -500);
     this.loadPhotos(startIndex + 1, this.numPhotos, 500);
@@ -91,24 +91,24 @@ export default class LivePhotoPlayer {
   }
 
   renderPhoto(index) {
-    const container = this.container;
-    const ctx = container.getContext('2d');
-    const img = this.photos[index];
-    ctx.drawImage(img, 0, 0, container.width, container.height);
+    if (this.photos[index] && this.curPhoto !== index) {
+      this.curPhoto = index;
+      const container = this.container;
+      const ctx = container.getContext('2d');
+      const img = this.photos[index];
+      ctx.drawImage(img, 0, 0, container.width, container.height);
+    }
   }
 
   renderPhotoByDelta(delta) {
-    let newCurPhoto = this.curPhoto + delta;
+    let newPhoto = this.curPhoto + delta;
 
-    if (delta < 0 && newCurPhoto < 0) {
-      newCurPhoto = 0;
-    } else if (delta > 0 && newCurPhoto >= this.numPhotos) {
-      newCurPhoto = this.numPhotos - 1;
+    if (delta < 0 && newPhoto < 0) {
+      newPhoto = 0;
+    } else if (delta > 0 && newPhoto >= this.numPhotos) {
+      newPhoto = this.numPhotos - 1;
     }
-    if (this.photos[newCurPhoto]) {
-      this.curPhoto = newCurPhoto;
-      this.renderPhoto(newCurPhoto);
-    }
+    this.renderPhoto(newPhoto);
   }
 
   onRotation = (rotation) => {
