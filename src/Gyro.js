@@ -1,4 +1,3 @@
-import raf from 'raf';
 import isFunction from 'lodash/isFunction';
 
 const RESET_DELAY = 300;
@@ -6,7 +5,6 @@ const RESET_DELAY = 300;
 export default class Gyro {
   constructor(callback) {
     this.callback = callback;
-    this.rotation = null;
     this.isPortrait = null;
     this.needResetRotation = false;
   }
@@ -16,34 +14,28 @@ export default class Gyro {
 
     if (orientationSupport) {
       window.addEventListener('deviceorientation', this.onDeviceOrientation);
-      raf(this.onAnimationFrame);
-    }
-  }
-
-  onAnimationFrame = () => {
-    if (isFunction(this.callback)) {
-      this.callback(this.rotation);
-      raf(this.onAnimationFrame);
     }
   }
 
   onDeviceOrientation = (e) => {
-    this.updateDimension();
+    let rotation = null;
 
-    if (this.needResetRotation) {
-      this.rotation = null;
-    } else if (e.beta !== null && e.gamma !== null) {
+    this.updateDimension();
+    if (!this.needResetRotation && e.beta !== null && e.gamma !== null) {
       if (this.isPortrait) {
-        this.rotation = {
+        rotation = {
           x: e.gamma,
           y: e.beta,
         };
       } else {
-        this.rotation = {
+        rotation = {
           x: e.beta,
           y: e.gamma,
         };
       }
+    }
+    if (isFunction(this.callback)) {
+      this.callback(rotation);
     }
   }
 

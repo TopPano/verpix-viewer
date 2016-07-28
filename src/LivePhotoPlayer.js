@@ -3,12 +3,13 @@
 import fill from 'lodash/fill';
 import isFunction from 'lodash/isFunction';
 import inRange from 'lodash/inRange';
+import raf from 'raf';
 
 import { DIRECTION } from 'constants/common';
 import LIVEPHOTO_DEFAULT from 'constants/livephoto';
 import EVENTS from 'constants/events';
 import { isMobile } from 'lib/devices';
-import { getPosition, getX, getY } from 'lib/events/click';
+import { getPosition } from 'lib/events/click';
 import Gyro from './Gyro';
 
 export default class LivePhotoPlayer {
@@ -30,7 +31,9 @@ export default class LivePhotoPlayer {
     this.isPlayerEnabled = false;
     this.curPhoto = -1;
     this.lastPixel = null;
+    this.curPixel = null;
     this.lastRotation = null;
+    this.curRotation = null;
   }
 
   start() {
@@ -95,10 +98,51 @@ export default class LivePhotoPlayer {
     if (this.isPlayerEnabled) {
       this.container.addEventListener(EVENTS.CLICK_START, this.handleTransitionStart);
       this.container.addEventListener(EVENTS.CLICK_MOVE, this.handleTransitionMove);
+      this.container.addEventListener(EVENTS.CLICK_END, this.handleTransitionEnd);
+      this.container.addEventListener(EVENTS.CLICK_CANCEL, this.handleTransitionEnd);
       if (isMobile()) {
-        new Gyro(this.onRotation).start();
+        new Gyro(this.handleRotation).start();
       }
+      raf(this.onAnimationFrame);
     }
+  }
+
+  onAnimationFrame = () => {
+    const delta = this.getPixelDelta() + this.getRotationDelta();
+    this.lastPixel = this.curPixel;
+    this.lastRotation = this.curRotation;
+    if (delta !== 0) {
+      this.renderPhotoByDelta(delta);
+    }
+    raf(this.onAnimationFrame);
+  }
+
+  getPixelDelta() {
+    let indexDelta = 0;
+
+    if (this.lastPixel && this.curPixel) {
+      const pixelDelta =
+        this.direction === DIRECTION.HORIZONTAL ?
+        this.curPixel.x - this.lastPixel.x :
+        this.curPixel.y - this.lastPixel.y;
+      indexDelta = Math.round(pixelDelta / this.pixelStepDistance);
+    }
+
+    return indexDelta;
+  }
+
+  getRotationDelta() {
+    let indexDelta = 0;
+
+    if (this.lastRotation && this.curRotation) {
+      const rotationDelta =
+        this.direction === DIRECTION.HORIZONTAL ?
+        this.curRotation.x - this.lastRotation.x :
+        this.curRotation.y - this.lastRotation.y;
+      indexDelta = Math.round(this.numPhotos * (rotationDelta / LIVEPHOTO_DEFAULT.ROTATION_RANGE));
+    }
+
+    return indexDelta;
   }
 
   renderPhoto(index) {
@@ -122,43 +166,25 @@ export default class LivePhotoPlayer {
     this.renderPhoto(newPhoto);
   }
 
-  onRotation = (rotation) => {
-    if (rotation && this.lastRotation) {
-      const rotationDelta =
-        this.direction === DIRECTION.HORIZONTAL ?
-        rotation.x - this.lastRotation.x :
-        rotation.y - this.lastRotation.y;
-      const indexDelta =
-        Math.round(this.numPhotos * (rotationDelta / LIVEPHOTO_DEFAULT.ROTATION_RANGE));
-      if (indexDelta !== 0) {
-        this.renderPhotoByDelta(indexDelta);
-      }
-    }
-    this.lastRotation = rotation;
+  handleRotation = (rotation) => {
+    this.curRotation = rotation;
   }
 
   handleTransitionStart = (e) => {
     if (this.isLeftBtnPressed(e)) {
-      this.lastPixel = getPosition(e);
+      this.curPixel = getPosition(e);
     }
   }
 
   handleTransitionMove = (e) => {
     // Left button is clicked.
     if (this.isLeftBtnPressed(e)) {
-      const lastPixel = this.lastPixel;
-      const curX = getX(e);
-      const curY = getY(e);
-      if (lastPixel) {
-        const pixelDelta =
-            this.direction === DIRECTION.HORIZONTAL ?
-          curX - lastPixel.x :
-          curY - lastPixel.y;
-        const indexDelta = Math.round(pixelDelta / this.pixelStepDistance);
-        this.renderPhotoByDelta(indexDelta);
-      }
-      this.lastPixel = { x: curX, y: curY };
+      this.curPixel = getPosition(e);
     }
+  }
+
+  handleTransitionEnd = () => {
+    this.curPixel = null;
   }
 
   isLeftBtnPressed(e) {
