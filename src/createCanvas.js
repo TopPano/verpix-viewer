@@ -1,11 +1,11 @@
-export default function createCanvas(width, height) {
+export default function createCanvas(wrapper, width, height) {
   const canvas = document.createElement('CANVAS');
 
   canvas.width = width;
   canvas.height = height;
   canvas.style.width = `${width}px`;
   canvas.style.height = `${height}px`;
-  document.getElementById('app').appendChild(canvas);
+  wrapper.appendChild(canvas);
 
   return canvas;
 }
