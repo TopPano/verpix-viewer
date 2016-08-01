@@ -684,7 +684,7 @@
     },
     "bluebird": {
       "version": "3.4.1",
-      "from": "bluebird@latest",
+      "from": "bluebird@>=3.1.1 <4.0.0",
       "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.4.1.tgz"
     },
     "bn.js": {
@@ -4303,7 +4303,7 @@
     },
     "query-string": {
       "version": "4.2.2",
-      "from": "query-string@>=4.1.0 <5.0.0",
+      "from": "query-string@latest",
       "resolved": "https://registry.npmjs.org/query-string/-/query-string-4.2.2.tgz"
     },
     "querystring": {

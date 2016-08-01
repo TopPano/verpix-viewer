@@ -16,11 +16,12 @@
 -->
     <script src="<%= sdk %>"></script>
     <script src="<%= demo %>"></script>
-    <form>
+    <form id="add-form" style="display: none;">
       post id:
-      <input id="post-id" type="text">
-      <button id="gen-post" type="button">add</button><br />
-      <textarea id="msg" rows="4" cols="50" disabled="true"></textarea>
+      <input id="add-id" type="text">
+      <button id="add-btn" type="button">add</button>
+      <button id="gen-btn" type="button" disabled="true">Generate new page</button><br />
+      <textarea id="add-msg" rows="4" cols="50" disabled="true"></textarea>
     </form>
   </body>
 </html>
