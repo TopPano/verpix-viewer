@@ -1,4 +1,5 @@
 import forEach from 'lodash/forEach';
+import isFunction from 'lodash/isFunction';
 
 import config from 'config';
 import createCanvas from './createCanvas';
@@ -32,7 +33,7 @@ function getCustomizedDimension(wrapper, origDimension) {
   };
 }
 
-function createLivephoto(wrapper, postId) {
+function createLivephoto(wrapper, postId, callback) {
   const url = `${API_ROOT}/posts/${postId}`;
   getPost(url).then((post) => {
     const dimension = getCustomizedDimension(wrapper, post.dimension);
@@ -44,8 +45,13 @@ function createLivephoto(wrapper, postId) {
       dimension: post.dimension,
     }).start();
     optimizeMobile(wrapper);
-  }).catch(() => {
-    // TODO: Error handling
+    if (isFunction(callback)) {
+      callback();
+    }
+  }).catch((err) => {
+    if (isFunction(callback)) {
+      callback(err);
+    }
   });
 }
 
@@ -58,6 +64,8 @@ window.addEventListener('load', () => {
   const wrappers = document.getElementsByClassName('verpix-livephoto');
   forEach(wrappers, (wrapper) => {
     const postId = getDataAttribute(wrapper, 'id');
-    createLivephoto(wrapper, postId);
+    createLivephoto(wrapper, postId, () => {
+      // TODO: Error handling
+    });
   });
 });

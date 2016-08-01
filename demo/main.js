@@ -4,8 +4,16 @@ function handleClickBtn(e) {
   const postId = postIdInput.value;
   const wrapper = document.createElement('DIV');
   wrapper.setAttribute('data-id', postId);
-  document.body.appendChild(wrapper);
-  window.verpix.createLivephoto(wrapper, postId);
+  window.verpix.createLivephoto(wrapper, postId, (err) => {
+    const msgBox = document.getElementById('msg');
+    if (err) {
+      msgBox.value = err;
+    } else {
+      document.body.appendChild(wrapper);
+      msgBox.value = `Post "${postId}" is added`;
+    }
+    postIdInput.value = '';
+  });
 }
 
 window.addEventListener('load', () => {
