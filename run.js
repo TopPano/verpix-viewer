@@ -37,7 +37,7 @@ tasks.set('html', () => {
   const assets = JSON.parse(fs.readFileSync('./public/dist/assets.json', 'utf8'));
   const template = fs.readFileSync('./public/index.ejs', 'utf8');
   const render = ejs.compile(template, { filename: './public/index.ejs' });
-  const output = render({ debug: webpackConfig.debug, bundle: assets.main.js, config });
+  const output = render({ debug: webpackConfig.debug, sdk: assets.sdk.js, demo: assets.demo.js, config });
   fs.writeFileSync('./public/dist/index.html', output, 'utf8');
 });
 
@@ -131,10 +131,11 @@ tasks.set('start', () => {
     const webpackHotMiddleware = require('webpack-hot-middleware')(compiler);
     compiler.plugin('done', stats => {
       // Generate index.html page
-      const bundle = stats.compilation.chunks.find(x => x.name === 'main').files[0];
+      const sdk = stats.compilation.chunks.find(x => x.name === 'sdk').files[0];
+      const demo = stats.compilation.chunks.find(x => x.name === 'demo').files[0];
       const template = fs.readFileSync('./public/index.ejs', 'utf8');
       const render = ejs.compile(template, { filename: './public/index.ejs' });
-      const output = render({ debug: true, bundle: `/dist/${bundle}`, config });
+      const output = render({ debug: true, sdk: `/dist/${sdk}`, demo: `/dist/${demo}`, config });
       fs.writeFileSync('./public/dist/index.html', output, 'utf8');
 
       // Launch Browsersync after the initial bundling is complete

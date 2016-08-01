@@ -50,6 +50,11 @@ function createLivephoto(wrapper, postId) {
 }
 
 window.addEventListener('load', () => {
+  // Define global variable "verpix"
+  window.verpix = {
+    createLivephoto,
+  };
+
   const wrappers = document.getElementsByClassName('verpix-livephoto');
   forEach(wrappers, (wrapper) => {
     const postId = getDataAttribute(wrapper, 'id');

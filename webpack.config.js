@@ -21,16 +21,16 @@ const config = {
   context: __dirname,
 
   // The entry point for the bundle
-  entry: [
-    /* The main entry point of your JavaScript application */
-    './src/main.js',
-  ],
+  entry: {
+    sdk: './src/main.js',
+    demo: './demo/main.js'
+  },
 
   // Options affecting the output of the compilation
   output: {
     path: path.resolve(__dirname, './public/dist'),
     publicPath: isDebug ? '/dist/' : '',
-    filename: isDebug ? '[name].js?[hash]' : 'app.js',
+    filename: isDebug ? '[name].js?[hash]' : 'verpix-[name].js',
     chunkFilename: isDebug ? '[id].js?[chunkhash]' : '[id].[chunkhash].js',
     sourcePrefix: '  ',
   },
@@ -77,7 +77,8 @@ const config = {
       {
         test: /\.js?$/,
         include: [
-          path.resolve(__dirname, './src')
+          path.resolve(__dirname, './src'),
+          path.resolve(__dirname, './demo')
         ],
         loader: 'eslint-loader'
       }
@@ -87,6 +88,7 @@ const config = {
         test: /\.js?$/,
         include: [
           path.resolve(__dirname, './src'),
+          path.resolve(__dirname, './demo'),
           path.resolve(__dirname, './config')
         ],
         loader: `babel-loader?${JSON.stringify(babelConfig)}`,
@@ -192,7 +194,7 @@ if (!isDebug) {
 
 // Hot Module Replacement (HMR)
 if (isDebug && useHMR) {
-  config.entry.unshift('webpack-hot-middleware/client');
+  config.entry.hmr = 'webpack-hot-middleware/client';
   config.plugins.push(new webpack.HotModuleReplacementPlugin());
   config.plugins.push(new webpack.NoErrorsPlugin());
 }
