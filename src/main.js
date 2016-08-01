@@ -33,7 +33,8 @@ function getCustomizedDimension(wrapper, origDimension) {
   };
 }
 
-function createLivephoto(wrapper, postId, callback) {
+function createLivephoto(wrapper, callback) {
+  const postId = getDataAttribute(wrapper, 'id');
   const url = `${API_ROOT}/posts/${postId}`;
   getPost(url).then((post) => {
     const dimension = getCustomizedDimension(wrapper, post.dimension);
@@ -63,8 +64,7 @@ window.addEventListener('load', () => {
 
   const wrappers = document.getElementsByClassName('verpix-livephoto');
   forEach(wrappers, (wrapper) => {
-    const postId = getDataAttribute(wrapper, 'id');
-    createLivephoto(wrapper, postId, () => {
+    createLivephoto(wrapper, () => {
       // TODO: Error handling
     });
   });
