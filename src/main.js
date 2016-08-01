@@ -8,12 +8,34 @@ import getDataAttribute from './getDataAttribute';
 
 const API_URL = 'https://www.verpix.me/api';
 
+function getCustomizedDimension(wrapper, origDimension) {
+  let width = origDimension.width;
+  let height = origDimension.height;
+  const custWidth = getDataAttribute(wrapper, 'width');
+  const custHeight = getDataAttribute(wrapper, 'height');
+
+  if (custWidth !== null && custHeight !== null) {
+    width = custWidth;
+    height = custHeight;
+  } else if (custWidth !== null) {
+    width = custWidth;
+    height = Math.round(origDimension.height * (custWidth / origDimension.width));
+  } else if (custHeight !== null) {
+    width = Math.round(origDimension.width * (custHeight / origDimension.height));
+    height = custHeight;
+  }
+
+  return {
+    width,
+    height,
+  };
+}
+
 function createLivephoto(wrapper, postId) {
   const url = `${API_URL}/posts/${postId}`;
   getPost(url).then((post) => {
-    const width = post.dimension.width;
-    const height = post.dimension.height;
-    const container = createCanvas(wrapper, width, height);
+    const dimension = getCustomizedDimension(wrapper, post.dimension);
+    const container = createCanvas(wrapper, dimension.width, dimension.height);
 
     new LivePhotoPlayer({
       container,
