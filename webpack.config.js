@@ -86,7 +86,8 @@ const config = {
       {
         test: /\.js?$/,
         include: [
-          path.resolve(__dirname, './src')
+          path.resolve(__dirname, './src'),
+          path.resolve(__dirname, './config')
         ],
         loader: `babel-loader?${JSON.stringify(babelConfig)}`,
       },
@@ -129,7 +130,8 @@ const config = {
     root: path.resolve(__dirname),
     alias: {
       constants: 'src/constants',
-      lib: 'src/lib'
+      lib: 'src/lib',
+      config: 'config'
     }
   },
 

@@ -1,12 +1,13 @@
 import forEach from 'lodash/forEach';
 
+import config from 'config';
 import createCanvas from './createCanvas';
 import getPost from './getPost';
 import LivePhotoPlayer from './LivePhotoPlayer';
 import optimizeMobile from './optimizeMobile';
 import getDataAttribute from './getDataAttribute';
 
-const API_URL = 'https://www.verpix.me/api';
+const API_ROOT = config.apiRoot;
 
 function getCustomizedDimension(wrapper, origDimension) {
   let width = origDimension.width;
@@ -32,7 +33,7 @@ function getCustomizedDimension(wrapper, origDimension) {
 }
 
 function createLivephoto(wrapper, postId) {
-  const url = `${API_URL}/posts/${postId}`;
+  const url = `${API_ROOT}/posts/${postId}`;
   getPost(url).then((post) => {
     const dimension = getCustomizedDimension(wrapper, post.dimension);
     const container = createCanvas(wrapper, dimension.width, dimension.height);
