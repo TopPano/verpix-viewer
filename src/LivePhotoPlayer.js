@@ -184,7 +184,12 @@ export default class LivePhotoPlayer {
     if (indexDelta !== 0) {
       this.renderPhotoByDelta(indexDelta);
     }
-    raf(this.onAnimationFrame);
+
+    if (this.playMode === PLAY_MODE.AUTO) {
+      setTimeout(this.onAnimationFrame, 1000 / LIVEPHOTO_DEFAULT.AUTO_PLAY_RATE);
+    } else {
+      raf(this.onAnimationFrame);
+    }
   }
 
   getPixelIndexDelta() {

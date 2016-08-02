@@ -6,6 +6,7 @@ export const LIVEPHOTO_DEFAULT = {
   PLAY_THRESHOLD: 0.5, // The threshold (proportion of loaded photos to all photos) to start playing
   CONCURRENT_LOADING_PHOTOS: 10, // The limit number of concurrently loading photos
   AUTO_PLAY_ENABLED: true, // Enable auto play or not if the user "keep still" for a while
+  AUTO_PLAY_RATE: 20, // The auto play frame rate
   MANUAL_TO_AUTO_THRESHOLD: 1000, // The period (in milliseconds) to wait for changing from manual to auto mode
   AUTO_TO_MANUAL_THRESHOLD: 100, // The period (milliseconds) to wait for changing from auto to manual mode
 };
