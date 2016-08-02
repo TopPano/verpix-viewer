@@ -155,16 +155,24 @@ export default class LivePhotoPlayer {
     if (this.playMode === PLAY_MODE.AUTO && LIVEPHOTO_DEFAULT.AUTO_PLAY_ENABLED) {
       if (this.autoPlayDir === AUTO_PLAY_DIR.STL) {
         if ((this.curPhoto === this.numPhotos - 1) || !this.photos[this.curPhoto]) {
-          indexDelta = -1;
-          this.autoPlayDir = AUTO_PLAY_DIR.LTS;
+          // Reach to the edge, suspend for a while
+          this.autoPlayDir = AUTO_PLAY_DIR.NONE;
+          setTimeout(() => {
+            this.autoPlayDir = AUTO_PLAY_DIR.LTS;
+          }, LIVEPHOTO_DEFAULT.AUTO_PLAY_SUSPEND_PERIOD);
         } else {
+          // No the edge, just move to next photo
           indexDelta = 1;
         }
-      } else {
+      } else if (this.autoPlayDir === AUTO_PLAY_DIR.LTS) {
         if ((this.curPhoto === 0) || !this.photos[this.curPhoto]) {
-          indexDelta = 1;
-          this.autoPlayDir = AUTO_PLAY_DIR.STL;
+          // Reach to the edge, suspend for a while
+          this.autoPlayDir = AUTO_PLAY_DIR.NONE;
+          setTimeout(() => {
+            this.autoPlayDir = AUTO_PLAY_DIR.STL;
+          }, LIVEPHOTO_DEFAULT.AUTO_PLAY_SUSPEND_PERIOD);
         } else {
+          // No the edge, just move to previous photo
           indexDelta = -1;
         }
       }
