@@ -14,7 +14,7 @@ import Gyro from './Gyro';
 
 const AUTO_PLAY_MAGIC_NUMBER = 100;
 
-export default class LivePhotoPlayer {
+export default class LivephotoPlayer {
   constructor(params) {
     // Read only member variables
     this.container = params.container;

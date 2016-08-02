@@ -1,70 +1,16 @@
 import forEach from 'lodash/forEach';
-import isFunction from 'lodash/isFunction';
 
-import config from 'config';
-import createCanvas from './createCanvas';
-import getPost from './getPost';
-import LivePhotoPlayer from './LivePhotoPlayer';
-import optimizeMobile from './optimizeMobile';
-import getDataAttribute from './getDataAttribute';
-
-const API_ROOT = config.apiRoot;
-
-function getCustomizedDimension(wrapper, origDimension) {
-  let width = origDimension.width;
-  let height = origDimension.height;
-  const custWidth = getDataAttribute(wrapper, 'width');
-  const custHeight = getDataAttribute(wrapper, 'height');
-
-  if (custWidth !== null && custHeight !== null) {
-    width = custWidth;
-    height = custHeight;
-  } else if (custWidth !== null) {
-    width = custWidth;
-    height = Math.round(origDimension.height * (custWidth / origDimension.width));
-  } else if (custHeight !== null) {
-    width = Math.round(origDimension.width * (custHeight / origDimension.height));
-    height = custHeight;
-  }
-
-  return {
-    width,
-    height,
-  };
-}
-
-function createLivephoto(wrapper, callback) {
-  const postId = getDataAttribute(wrapper, 'id');
-  const url = `${API_ROOT}/posts/${postId}`;
-  getPost(url).then((post) => {
-    const dimension = getCustomizedDimension(wrapper, post.dimension);
-    const container = createCanvas(wrapper, dimension.width, dimension.height);
-
-    new LivePhotoPlayer({
-      container,
-      photosSrcUrl: post.media.srcHighImages,
-      dimension: post.dimension,
-    }).start();
-    optimizeMobile(wrapper);
-    if (isFunction(callback)) {
-      callback();
-    }
-  }).catch((err) => {
-    if (isFunction(callback)) {
-      callback(err);
-    }
-  });
-}
+import livephoto from './livephoto';
 
 window.addEventListener('load', () => {
   // Define global variable "verpix"
   window.verpix = {
-    createLivephoto,
+    createLivephoto: livephoto.create,
   };
 
   const wrappers = document.getElementsByClassName('verpix-livephoto');
   forEach(wrappers, (wrapper) => {
-    createLivephoto(wrapper, () => {
+    livephoto.create(wrapper, () => {
       // TODO: Error handling
     });
   });
