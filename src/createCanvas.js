@@ -5,6 +5,7 @@ export default function createCanvas(wrapper, width, height) {
   canvas.height = height;
   canvas.style.width = `${width}px`;
   canvas.style.height = `${height}px`;
+  canvas.style.cursor = 'pointer';
   wrapper.appendChild(canvas);
 
   return canvas;
