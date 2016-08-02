@@ -8,9 +8,9 @@ window.addEventListener('load', () => {
     createLivephoto: livephoto.create,
   };
 
-  const wrappers = document.getElementsByClassName('verpix-livephoto');
-  forEach(wrappers, (wrapper) => {
-    livephoto.create(wrapper, () => {
+  const roots = document.getElementsByClassName('verpix-livephoto');
+  forEach(roots, (root) => {
+    livephoto.create(root, () => {
       // TODO: Error handling
     });
   });

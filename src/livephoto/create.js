@@ -9,11 +9,11 @@ import getDataAttribute from './getDataAttribute';
 
 const API_ROOT = config.apiRoot;
 
-function getCustomizedDimension(wrapper, origDimension) {
+function getWrapperDimension(root, origDimension) {
   let width = origDimension.width;
   let height = origDimension.height;
-  const custWidth = getDataAttribute(wrapper, 'width');
-  const custHeight = getDataAttribute(wrapper, 'height');
+  const custWidth = getDataAttribute(root, 'width');
+  const custHeight = getDataAttribute(root, 'height');
 
   if (custWidth !== null && custHeight !== null) {
     width = custWidth;
@@ -32,19 +32,19 @@ function getCustomizedDimension(wrapper, origDimension) {
   };
 }
 
-export default function create(wrapper, callback) {
-  const postId = getDataAttribute(wrapper, 'id');
+export default function create(root, callback) {
+  const postId = getDataAttribute(root, 'id');
   const url = `${API_ROOT}/posts/${postId}`;
   getPost(url).then((post) => {
-    const dimension = getCustomizedDimension(wrapper, post.dimension);
-    const container = createCanvas(wrapper, dimension.width, dimension.height);
+    const wrapperDimension = getWrapperDimension(root, post.dimension);
+    const container = createCanvas(root, post.dimension, wrapperDimension);
 
     new LivephotoPlayer({
       container,
       photosSrcUrl: post.media.srcHighImages,
       dimension: post.dimension,
     }).start();
-    optimizeMobile(wrapper);
+    optimizeMobile(root);
     if (isFunction(callback)) {
       callback();
     }
