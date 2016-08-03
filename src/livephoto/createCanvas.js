@@ -23,7 +23,12 @@ export default function createCanvas(root, canvasDimension, wrapperDimension) {
   inWrapper.style.position = 'absolute';
   inWrapper.style.top = '50%';
   inWrapper.style.left = '0';
-  inWrapper.style.transform = 'translateY(-50%)';
+  const transformStyle = 'translateY(-50%)';
+  inWrapper.style.webkitTransform = transformStyle;
+  inWrapper.style.MozTransform = transformStyle;
+  inWrapper.style.msTransform = transformStyle;
+  inWrapper.style.OTransform = transformStyle;
+  inWrapper.style.transform = transformStyle;
 
   // Attributes for canvas
   canvas.width = canvasDimension.width;
