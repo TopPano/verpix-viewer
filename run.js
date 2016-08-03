@@ -4,6 +4,7 @@ const fs = require('fs');
 const del = require('del');
 const ejs = require('ejs');
 const cp = require('shelljs').cp;
+const mkdir = require('shelljs').mkdir;
 const webpack = require('webpack');
 
 // TODO: Update configuration settings
@@ -79,8 +80,9 @@ tasks.set('bundle', () => {
 tasks.set('copy', () => {
   // Each target could be a file or directory
   const targets = ['favicon.ico'];
+  mkdir('-p', 'public/dist');
   targets.forEach((target) => {
-    cp('-R', `public/${target}`, `public/dist`);
+    cp('-R', `public/${target}`, 'public/dist');
     console.log(`File/Directory "${target}" is copied`);
   });
 });
