@@ -51,6 +51,7 @@ export default class LivephotoPlayer {
     this.curPixel = null;
     this.lastRotation = null;
     this.curRotation = null;
+    this.gyro = null;
   }
 
   start = () => {
@@ -126,7 +127,8 @@ export default class LivephotoPlayer {
       this.container.addEventListener(EVENTS.CLICK_END, this.handleTransitionEnd);
       this.container.addEventListener(EVENTS.CLICK_CANCEL, this.handleTransitionEnd);
       if (isMobile()) {
-        new Gyro(this.handleRotation).start();
+        this.gyro = new Gyro(this.handleRotation);
+        this.gyro.start();
       }
       this.playMode = PLAY_MODE.MANUAL;
       raf(this.onAnimationFrame);
@@ -138,6 +140,9 @@ export default class LivephotoPlayer {
     this.container.removeEventListener(EVENTS.CLICK_MOVE, this.handleTransitionMove);
     this.container.removeEventListener(EVENTS.CLICK_END, this.handleTransitionEnd);
     this.container.removeEventListener(EVENTS.CLICK_CANCEL, this.handleTransitionEnd);
+    if (isMobile()) {
+      this.gyro.stop();
+    }
     this.clearContainer();
     this.resetMemberVars();
   }

@@ -17,6 +17,10 @@ export default class Gyro {
     }
   }
 
+  stop() {
+    window.removeEventListener('deviceorientation', this.onDeviceOrientation);
+  }
+
   onDeviceOrientation = (e) => {
     let rotation = null;
 
