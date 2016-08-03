@@ -10,8 +10,12 @@ window.addEventListener('load', () => {
 
   const roots = document.getElementsByClassName('verpix-livephoto');
   forEach(roots, (root) => {
-    livephoto.create(root, () => {
-      // TODO: Error handling
+    livephoto.create(root, (err, instance) => {
+      if (err) {
+        // TODO: Error handling
+      } else {
+        instance.start();
+      }
     });
   });
 });

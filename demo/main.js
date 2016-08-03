@@ -24,7 +24,7 @@ function addPost(postId) {
   const wrapper = document.createElement('DIV');
 
   wrapper.setAttribute('data-id', postId);
-  window.verpix.createLivephoto(wrapper, (err) => {
+  window.verpix.createLivephoto(wrapper, (err, instance) => {
     const msgBox = document.getElementById('add-msg');
     if (err) {
       msgBox.value = err;
@@ -37,6 +37,7 @@ function addPost(postId) {
       document.body.appendChild(label);
       document.body.appendChild(wrapper);
       msgBox.value = `Post "${postId}" is added`;
+      instance.start();
     }
   });
 }

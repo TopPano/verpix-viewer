@@ -31,8 +31,10 @@ export default class LivephotoPlayer {
       Math.round(LIVEPHOTO_DEFAULT.MANUAL_TO_AUTO_THRESHOLD / AUTO_PLAY_MAGIC_NUMBER);
     this.thresholdToManualPlay =
       Math.round(LIVEPHOTO_DEFAULT.AUTO_TO_MANUAL_THRESHOLD / AUTO_PLAY_MAGIC_NUMBER);
+  }
 
-    // Writable member variables
+  // Initialize or reset member variables
+  resetMemberVars() {
     this.photos = fill(Array(this.numPhotos), null);
     this.numLoadedPhotos = 0;
     this.isPlayerEnabled = false;
@@ -51,12 +53,20 @@ export default class LivephotoPlayer {
     this.curRotation = null;
   }
 
-  start() {
+  start = () => {
+    // Writable member variables
+    this.resetMemberVars();
+
+    // Start loading and rending photos
     const startIndex = Math.round(this.numPhotos / 2);
     const loadStep = Math.round(LIVEPHOTO_DEFAULT.CONCURRENT_LOADING_PHOTOS / 2);
     this.loadPhoto(startIndex, this.renderPhoto.bind(this, startIndex));
     this.loadPhotos(startIndex - 1, -1, -loadStep);
     this.loadPhotos(startIndex + 1, this.numPhotos, loadStep);
+  }
+
+  stop = () => {
+    this.stopPlay();
   }
 
   loadPhoto(index, callback) {
@@ -121,6 +131,15 @@ export default class LivephotoPlayer {
       this.playMode = PLAY_MODE.MANUAL;
       raf(this.onAnimationFrame);
     }
+  }
+
+  stopPlay() {
+    this.container.removeEventListener(EVENTS.CLICK_START, this.handleTransitionStart);
+    this.container.removeEventListener(EVENTS.CLICK_MOVE, this.handleTransitionMove);
+    this.container.removeEventListener(EVENTS.CLICK_END, this.handleTransitionEnd);
+    this.container.removeEventListener(EVENTS.CLICK_CANCEL, this.handleTransitionEnd);
+    this.clearContainer();
+    this.resetMemberVars();
   }
 
   startWaitManualToAuto() {
@@ -229,7 +248,7 @@ export default class LivephotoPlayer {
 
     if (this.playMode === PLAY_MODE.AUTO) {
       setTimeout(this.onAnimationFrame, 1000 / LIVEPHOTO_DEFAULT.AUTO_PLAY_RATE);
-    } else {
+    } else if (this.playMode === PLAY_MODE.MANUAL) {
       raf(this.onAnimationFrame);
     }
   }
@@ -281,6 +300,12 @@ export default class LivephotoPlayer {
       newPhoto = this.numPhotos - 1;
     }
     this.renderPhoto(newPhoto);
+  }
+
+  clearContainer() {
+    const container = this.container;
+    const ctx = container.getContext('2d');
+    ctx.clearRect(0, 0, container.width, container.height);
   }
 
   handleRotation = (rotation) => {

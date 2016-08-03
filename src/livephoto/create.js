@@ -39,14 +39,17 @@ export default function create(root, callback) {
     const wrapperDimension = getWrapperDimension(root, post.dimension);
     const container = createCanvas(root, post.dimension, wrapperDimension);
 
-    new LivephotoPlayer({
+    const player = new LivephotoPlayer({
       container,
       photosSrcUrl: post.media.srcHighImages,
       dimension: post.dimension,
-    }).start();
+    });
     optimizeMobile(root);
     if (isFunction(callback)) {
-      callback();
+      callback(null, {
+        start: player.start,
+        stop: player.stop,
+      });
     }
   }).catch((err) => {
     if (isFunction(callback)) {
