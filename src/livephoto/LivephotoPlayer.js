@@ -9,6 +9,7 @@ import { DIRECTION } from 'constants/common';
 import { LIVEPHOTO_DEFAULT, PLAY_MODE, AUTO_PLAY_DIR } from 'constants/livephoto';
 import EVENTS from 'constants/events';
 import { isMobile } from 'lib/devices';
+import isHover from 'lib/dom/isHover';
 import { getPosition } from 'lib/events/click';
 import Gyro from './Gyro';
 
@@ -39,7 +40,9 @@ export default class LivephotoPlayer {
     this.playMode = PLAY_MODE.NONE;
     this.autoPlayDir = AUTO_PLAY_DIR.STL;
     this.isWaitManualToAuto = false;
+    this.manualToAutoTimeout = null;
     this.isWaitAutoToManual = false;
+    this.autoToManualIntervl = null;
     this.countToAutoPlay = this.thresholdToAutoPlay;
     this.countToManualPlay = this.thresholdToManualPlay;
     this.lastPixel = null;
@@ -124,12 +127,22 @@ export default class LivephotoPlayer {
     if (this.playMode === PLAY_MODE.MANUAL && !this.isWaitManualToAuto) {
       this.isWaitManualToAuto = true;
       this.countToAutoPlay = this.thresholdToAutoPlay;
-      setTimeout(() => {
+      this.manualToAutoTimeout = setTimeout(() => {
         if (this.countToAutoPlay > 0) {
           this.playMode = PLAY_MODE.AUTO;
         }
         this.isWaitManualToAuto = false;
+        this.manualToAutoTimeout = null;
       }, LIVEPHOTO_DEFAULT.MANUAL_TO_AUTO_THRESHOLD);
+    }
+  }
+
+  stopWaitManualToAuto() {
+    if (this.isWaitManualToAuto && this.manualToAutoTimeout !== null) {
+      this.isWaitManualToAuto = true;
+      clearTimeout(this.manualToAutoTimeout);
+      this.isWaitManualToAuto = false;
+      this.manualToAutoTimeout = null;
     }
   }
 
@@ -137,20 +150,41 @@ export default class LivephotoPlayer {
     if (this.playMode === PLAY_MODE.AUTO && !this.isWaitAutoToManual) {
       this.isWaitAutoToManual = true;
       this.countToManualPlay = this.thresholdToManualPlay;
-      setTimeout(() => {
+      this.autoToManualTimeout = setTimeout(() => {
         if (this.countToManualPlay <= 0) {
           this.playMode = PLAY_MODE.MANUAL;
         }
         this.isWaitAutoToManual = false;
+        this.autoToManualTimeout = null;
       }, LIVEPHOTO_DEFAULT.AUTO_TO_MANUAL_THRESHOLD);
     }
   }
 
+  stopWaitAutoToManual() {
+    if (this.isWaitAutoToManual && this.autoToManualTimeout !== null) {
+      clearTimeout(this.autoToManualTimeout);
+      this.isWaitAutolToManual = false;
+      this.autoToManualTimeout = null;
+    }
+  }
+
   onAnimationFrame = () => {
+    const isHovering = isHover(this.container);
     const pixelIndexDelta = this.getPixelIndexDelta();
     const rotationIndexDelta = this.getRotationIndexDelta();
     const absIndexDelta = Math.abs(pixelIndexDelta) + Math.abs(rotationIndexDelta);
     let indexDelta = 0;
+
+    // Force to switch manual mode when mouse hovering
+    if (isHovering) {
+      this.playMode = PLAY_MODE.MANUAL;
+      if (this.isWaitAutoToManual) {
+        this.stopWaitAutoToManual();
+      }
+      if (this.isWaitManualToAuto) {
+        this.stopWaitManualToAuto();
+      }
+    }
 
     if (this.playMode === PLAY_MODE.AUTO && LIVEPHOTO_DEFAULT.AUTO_PLAY_ENABLED) {
       if (this.autoPlayDir === AUTO_PLAY_DIR.STL) {
@@ -183,7 +217,7 @@ export default class LivephotoPlayer {
     } else if (this.playMode === PLAY_MODE.MANUAL) {
       indexDelta = pixelIndexDelta + rotationIndexDelta;
       this.countToAutoPlay -= absIndexDelta;
-      if (LIVEPHOTO_DEFAULT.AUTO_PLAY_ENABLED && !this.isWaitManualToAuto) {
+      if (LIVEPHOTO_DEFAULT.AUTO_PLAY_ENABLED && !this.isWaitManualToAuto && !isHovering) {
         this.startWaitManualToAuto();
       }
     }
