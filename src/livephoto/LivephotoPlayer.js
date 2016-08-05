@@ -14,9 +14,17 @@ import { getPosition } from 'lib/events/click';
 import Gyro from './Gyro';
 
 const AUTO_PLAY_MAGIC_NUMBER = 100;
+const MAX_ROTATION_RANGE = 70;
+const TAIL_CONVERGENCE_THRESHOLD = 0.01;
+const SMOOTH_INDEX_DELTA_THRESHOLD = 0.00001;
+const MAX_FRAME_PERIOD = 70;
+const MIN_FRAME_PERIOD = 5;
 
 export default class LivephotoPlayer {
   constructor(params) {
+    const pixelStepMagicNumber = (100 - LIVEPHOTO_DEFAULT.SWIPE_SENSITIVITY) / 100;
+    const rotationStepMagicNumber = (100 - LIVEPHOTO_DEFAULT.GYRO_SENSITIVITY) / 100;
+
     // Read only member variables
     this.container = params.container;
     this.photosSrcUrl = params.photosSrcUrl;
@@ -25,21 +33,32 @@ export default class LivephotoPlayer {
     this.playThreshold = this.numPhotos * LIVEPHOTO_DEFAULT.PLAY_THRESHOLD;
     this.pixelStepDistance =
       this.direction === DIRECTION.HORIZONTAL ?
-      (params.dimension.width * LIVEPHOTO_DEFAULT.SWIPE_RANGE) / this.numPhotos :
-      (params.dimension.height * LIVEPHOTO_DEFAULT.SWIPE_RANGE) / this.numPhotos;
+      (params.dimension.width * pixelStepMagicNumber) / this.numPhotos :
+      (params.dimension.height * pixelStepMagicNumber) / this.numPhotos;
+    this.rotationStepDistance = (MAX_ROTATION_RANGE * rotationStepMagicNumber) / this.numPhotos;
     this.thresholdToAutoPlay =
       Math.round(LIVEPHOTO_DEFAULT.MANUAL_TO_AUTO_THRESHOLD / AUTO_PLAY_MAGIC_NUMBER);
     this.thresholdToManualPlay =
       Math.round(LIVEPHOTO_DEFAULT.AUTO_TO_MANUAL_THRESHOLD / AUTO_PLAY_MAGIC_NUMBER);
   }
 
-  // Initialize or reset member variables
+  // Initialize or reset writable member variables
   resetMemberVars() {
+    // Member variables for common usage
     this.photos = fill(Array(this.numPhotos), null);
     this.numLoadedPhotos = 0;
     this.isPlayerEnabled = false;
     this.curPhoto = -1;
     this.playMode = PLAY_MODE.NONE;
+    this.lastPixel = null;
+    this.curPixel = null;
+    this.lastRotation = null;
+    this.curRotation = null;
+    this.gyro = null;
+    this.lastIndexDelta = 0;
+    this.lastIndexDeltas = fill(Array(LIVEPHOTO_DEFAULT.MOVE_BUFFER_SIZE), 0);
+
+    // Member variables for auto play
     this.autoPlayDir = AUTO_PLAY_DIR.STL;
     this.isWaitManualToAuto = false;
     this.manualToAutoTimeout = null;
@@ -47,11 +66,6 @@ export default class LivephotoPlayer {
     this.autoToManualIntervl = null;
     this.countToAutoPlay = this.thresholdToAutoPlay;
     this.countToManualPlay = this.thresholdToManualPlay;
-    this.lastPixel = null;
-    this.curPixel = null;
-    this.lastRotation = null;
-    this.curRotation = null;
-    this.gyro = null;
   }
 
   start = () => {
@@ -131,7 +145,8 @@ export default class LivephotoPlayer {
         this.gyro.start();
       }
       this.playMode = PLAY_MODE.MANUAL;
-      raf(this.onAnimationFrame);
+      this.onAnimationFrame();
+      raf(this.updateIndexDelta);
     }
   }
 
@@ -192,15 +207,15 @@ export default class LivephotoPlayer {
     }
   }
 
-  onAnimationFrame = () => {
+  updateIndexDelta = () => {
     const isHovering = isHover(this.container);
     const pixelIndexDelta = this.getPixelIndexDelta();
     const rotationIndexDelta = this.getRotationIndexDelta();
     const absIndexDelta = Math.abs(pixelIndexDelta) + Math.abs(rotationIndexDelta);
     let indexDelta = 0;
 
-    // Force to switch manual mode when mouse hovering
-    if (isHovering) {
+    // Force switching auto to manual mode when mouse hovering
+    if (isHovering && this.playMode === PLAY_MODE.AUTO) {
       this.playMode = PLAY_MODE.MANUAL;
       if (this.isWaitAutoToManual) {
         this.stopWaitAutoToManual();
@@ -210,6 +225,7 @@ export default class LivephotoPlayer {
       }
     }
 
+    // Calculate indexDelta for different mode
     if (this.playMode === PLAY_MODE.AUTO && LIVEPHOTO_DEFAULT.AUTO_PLAY_ENABLED) {
       if (this.autoPlayDir === AUTO_PLAY_DIR.STL) {
         if ((this.curPhoto === this.numPhotos - 1) || !this.photos[this.curPhoto]) {
@@ -245,28 +261,86 @@ export default class LivephotoPlayer {
         this.startWaitManualToAuto();
       }
     }
+    this.lastIndexDelta = indexDelta;
+    this.pushLastIndexDelta(indexDelta);
+
     this.lastPixel = this.curPixel;
     this.lastRotation = this.curRotation;
-    if (indexDelta !== 0) {
-      this.renderPhotoByDelta(indexDelta);
+
+    raf(this.updateIndexDelta);
+  }
+
+  onAnimationFrame = () => {
+    let nextFramePeriod = 0;
+    let move = 0;
+
+    const smoothIndexDelta = this.getSmoothIndexDelta();
+    if (this.playMode === PLAY_MODE.AUTO && LIVEPHOTO_DEFAULT.AUTO_PLAY_ENABLED) {
+      nextFramePeriod = Math.round(1000 / LIVEPHOTO_DEFAULT.AUTO_PLAY_RATE);
+      move = Math.round(smoothIndexDelta);
+    } else if (this.playMode === PLAY_MODE.MANUAL) {
+      if (!isMobile()) {
+        if (Math.abs(smoothIndexDelta) > SMOOTH_INDEX_DELTA_THRESHOLD) {
+          move = (smoothIndexDelta < 0) ? -1 : 1;
+          nextFramePeriod = this.clamp(
+            Math.abs(Math.round(50 / smoothIndexDelta)),
+            MIN_FRAME_PERIOD,
+            MAX_FRAME_PERIOD
+          );
+        }
+      } else {
+        // TODO: also apply smooth index delta on mobile
+        move = Math.round(this.lastIndexDelta);
+      }
     }
 
-    if (this.playMode === PLAY_MODE.AUTO) {
-      setTimeout(this.onAnimationFrame, 1000 / LIVEPHOTO_DEFAULT.AUTO_PLAY_RATE);
-    } else if (this.playMode === PLAY_MODE.MANUAL) {
+    if (move !== 0) {
+      this.renderPhotoByDelta(move);
+    }
+
+    if (nextFramePeriod > 0) {
+      setTimeout(this.onAnimationFrame, nextFramePeriod);
+    } else {
       raf(this.onAnimationFrame);
     }
+  }
+
+  pushLastIndexDelta(indexDelta) {
+    let newIndexDelta = indexDelta;
+
+    // If Detect direction is changed, clear all old history
+    if ((this.lastIndexDeltas[0] * newIndexDelta) < 0) {
+      this.lastIndexDeltas = fill(Array(LIVEPHOTO_DEFAULT.MOVE_BUFFER_SIZE), 0);
+    }
+    // Apply "long tail slow down"
+    if (newIndexDelta === 0 && Math.abs(this.lastIndexDeltas[0]) > TAIL_CONVERGENCE_THRESHOLD) {
+      newIndexDelta = this.lastIndexDeltas[0] / 2;
+    }
+    // Remove the oldest indexDelta
+    this.lastIndexDeltas.pop();
+    // Add the newest indexDelta
+    this.lastIndexDeltas.unshift(newIndexDelta);
+  }
+
+  getSmoothIndexDelta() {
+    const sum = this.lastIndexDeltas.reduce((previous, current) => current + previous);
+    return sum / this.lastIndexDeltas.length;
+  }
+
+  getPixelDelta(startPixel, endPixel) {
+    return (
+      this.direction === DIRECTION.HORIZONTAL ?
+      endPixel.x - startPixel.x :
+      endPixel.y - startPixel.y
+    );
   }
 
   getPixelIndexDelta() {
     let indexDelta = 0;
 
     if (this.lastPixel && this.curPixel) {
-      const pixelDelta =
-        this.direction === DIRECTION.HORIZONTAL ?
-        this.curPixel.x - this.lastPixel.x :
-        this.curPixel.y - this.lastPixel.y;
-      indexDelta = Math.round(pixelDelta / this.pixelStepDistance);
+      const pixelDelta = this.getPixelDelta(this.lastPixel, this.curPixel);
+      indexDelta = pixelDelta / this.pixelStepDistance;
     }
 
     return indexDelta;
@@ -280,7 +354,8 @@ export default class LivephotoPlayer {
         this.direction === DIRECTION.HORIZONTAL ?
         this.curRotation.x - this.lastRotation.x :
         this.curRotation.y - this.lastRotation.y;
-      indexDelta = Math.round(this.numPhotos * (rotationDelta / LIVEPHOTO_DEFAULT.ROTATION_RANGE));
+      // indexDelta = Math.round(rotationDelta / this.rotationStepDistance);
+      indexDelta = rotationDelta / this.rotationStepDistance;
     }
 
     return indexDelta;
@@ -340,5 +415,9 @@ export default class LivephotoPlayer {
       true :
       (e.which && e.button === 0) || (e.button && e.button === 0)
     );
+  }
+
+  clamp(val, min, max) {
+    return Math.min(Math.max(val, min), max);
   }
 }

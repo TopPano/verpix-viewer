@@ -1,10 +1,13 @@
 /* eslint-disable max-len */
 
 export const LIVEPHOTO_DEFAULT = {
-  SWIPE_RANGE: 0.8, // The maximum swipe (or mouse moving) range to play all photos
-  ROTATION_RANGE: 50, // The maximum rotation angle (in degree) to play all photos
+  // Option default values for common usage
+  SWIPE_SENSITIVITY: 80, // The sensitivity for swiping (or mouse moving), range from 1 to 99
+  GYRO_SENSITIVITY: 50, // The sensitivity for gyroscope rotating, range from 1 to 99
   PLAY_THRESHOLD: 0.5, // The threshold (proportion of loaded photos to all photos) to start playing
-  CONCURRENT_LOADING_PHOTOS: 10, // The limit number of concurrently loading photos
+  CONCURRENT_LOADING_PHOTOS: 20, // The limit number of concurrently loading photos
+  MOVE_BUFFER_SIZE: 20, // The lenght of buffer to store last movements
+  // Option default values for auto play
   AUTO_PLAY_ENABLED: true, // Enable auto play or not if the user "keep still" for a while
   AUTO_PLAY_RATE: 20, // The auto play frame rate (number of frames per second)
   AUTO_PLAY_SUSPEND_PERIOD: 500, // The period (in milliseconds) to suspend when reach the edge photo in auto mode
