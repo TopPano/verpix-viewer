@@ -1,20 +1,24 @@
+import merge from 'lodash/merge';
+
 import { isMobile } from 'lib/devices';
 
-let events;
+let events = {
+  WINDOW_RESIZE: 'resize',
+};
 if (isMobile()) {
-  events = {
+  events = merge({}, events, {
     CLICK_START: 'touchstart',
     CLICK_MOVE: 'touchmove',
     CLICK_END: 'touchend',
     CLICK_CANCEL: 'touchcancel',
-  };
+  });
 } else {
-  events = {
+  events = merge({}, events, {
     CLICK_START: 'mousedown',
     CLICK_MOVE: 'mousemove',
     CLICK_END: 'mouseup',
     CLICK_CANCEL: 'mouseout',
-  };
+  });
 }
 
 const EVENTS = events;

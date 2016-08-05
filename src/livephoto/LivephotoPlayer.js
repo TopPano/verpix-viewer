@@ -24,20 +24,16 @@ const SWIPE_MODE_CHAGE_PERIOD_UNIT = 16;
 
 export default class LivephotoPlayer {
   constructor(params) {
-    const pixelStepMagicNumber = (100 - LIVEPHOTO_DEFAULT.SWIPE_SENSITIVITY) / 100;
-    const rotationStepMagicNumber = (100 - LIVEPHOTO_DEFAULT.GYRO_SENSITIVITY) / 100;
-
     // Read only member variables
     this.container = params.container;
     this.photosSrcUrl = params.photosSrcUrl;
     this.numPhotos = this.photosSrcUrl.length;
-    this.direction = params.dimension.direction;
+    this.direction = params.direction;
     this.playThreshold = this.numPhotos * LIVEPHOTO_DEFAULT.PLAY_THRESHOLD;
-    this.pixelStepDistance =
-      this.direction === DIRECTION.HORIZONTAL ?
-      (params.dimension.width * pixelStepMagicNumber) / this.numPhotos :
-      (params.dimension.height * pixelStepMagicNumber) / this.numPhotos;
-    this.rotationStepDistance = (MAX_ROTATION_RANGE * rotationStepMagicNumber) / this.numPhotos;
+    this.pixelStepMagicNumber = (100 - LIVEPHOTO_DEFAULT.SWIPE_SENSITIVITY) / 100;
+    this.rotationStepMagicNumber = (100 - LIVEPHOTO_DEFAULT.GYRO_SENSITIVITY) / 100;
+    this.rotationStepDistance =
+      (MAX_ROTATION_RANGE * this.rotationStepMagicNumber) / this.numPhotos;
     this.thresholdToAutoPlay =
       Math.round(LIVEPHOTO_DEFAULT.MANUAL_TO_AUTO_THRESHOLD / AUTO_PLAY_MAGIC_NUMBER);
     this.thresholdToManualPlay =
@@ -50,6 +46,7 @@ export default class LivephotoPlayer {
     this.photos = fill(Array(this.numPhotos), null);
     this.numLoadedPhotos = 0;
     this.isPlayerEnabled = false;
+    this.pixelStepDistance = this.getNewPixelStepDistance();
     this.curPhoto = -1;
     this.playMode = PLAY_MODE.NONE;
     this.lastPixel = null;
@@ -147,6 +144,7 @@ export default class LivephotoPlayer {
       this.container.addEventListener(EVENTS.CLICK_MOVE, this.handleTransitionMove);
       this.container.addEventListener(EVENTS.CLICK_END, this.handleTransitionEnd);
       this.container.addEventListener(EVENTS.CLICK_CANCEL, this.handleTransitionEnd);
+      window.addEventListener(EVENTS.WINDOW_RESIZE, this.handleWindowResize);
       if (isMobile()) {
         this.gyro = new Gyro(this.handleRotation);
         this.gyro.start();
@@ -162,6 +160,7 @@ export default class LivephotoPlayer {
     this.container.removeEventListener(EVENTS.CLICK_MOVE, this.handleTransitionMove);
     this.container.removeEventListener(EVENTS.CLICK_END, this.handleTransitionEnd);
     this.container.removeEventListener(EVENTS.CLICK_CANCEL, this.handleTransitionEnd);
+    window.removeEventListener(EVENTS.WINDOW_RESIZE, this.handleWindowResize);
     if (isMobile()) {
       this.gyro.stop();
     }
@@ -368,7 +367,6 @@ export default class LivephotoPlayer {
         this.direction === DIRECTION.HORIZONTAL ?
         this.curRotation.x - this.lastRotation.x :
         this.curRotation.y - this.lastRotation.y;
-      // indexDelta = Math.round(rotationDelta / this.rotationStepDistance);
       indexDelta = rotationDelta / this.rotationStepDistance;
     }
 
@@ -416,6 +414,18 @@ export default class LivephotoPlayer {
     clearTimeout(this.swipe.noneToReleaseTimeout);
     this.swipe.noneToReleaseTimeout = null;
     this.swipe.isWaitNoneToRelease = false;
+  }
+
+  getNewPixelStepDistance() {
+    return (
+      this.direction === DIRECTION.HORIZONTAL ?
+      (this.container.offsetWidth * this.pixelStepMagicNumber) / this.numPhotos :
+      (this.container.offsetHeight * this.pixelStepMagicNumber) / this.numPhotos
+    );
+  }
+
+  handleWindowResize = () => {
+    this.pixelStepDistance = this.getNewPixelStepDistance();
   }
 
   handleRotation = (rotation) => {

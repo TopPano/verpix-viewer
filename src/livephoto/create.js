@@ -42,7 +42,7 @@ export default function create(root, callback) {
     const player = new LivephotoPlayer({
       container,
       photosSrcUrl: post.media.srcHighImages,
-      dimension: post.dimension,
+      direction: post.dimension.direction,
     });
     optimizeMobile(root);
     if (isFunction(callback)) {
