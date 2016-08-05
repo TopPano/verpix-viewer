@@ -21,6 +21,12 @@ export const PLAY_MODE = {
   AUTO: 'AUTO',
 };
 
+export const SWIPE_MODE = {
+  NONE: 'NONE', // Unable to swipe
+  HOLD: 'HOLD', // Left button is clicked (for mouse) or finger is pressed (for touch)
+  RELEASE: 'RELEASE', // Inverse of hold mode
+};
+
 export const AUTO_PLAY_DIR = {
   STL: 'SMALL_TO_LARGE',
   LTS: 'LARGE_TO_SMALL',

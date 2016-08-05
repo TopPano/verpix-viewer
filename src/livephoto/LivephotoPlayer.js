@@ -6,7 +6,7 @@ import inRange from 'lodash/inRange';
 import raf from 'raf';
 
 import { DIRECTION } from 'constants/common';
-import { LIVEPHOTO_DEFAULT, PLAY_MODE, AUTO_PLAY_DIR } from 'constants/livephoto';
+import { LIVEPHOTO_DEFAULT, PLAY_MODE, SWIPE_MODE, AUTO_PLAY_DIR } from 'constants/livephoto';
 import EVENTS from 'constants/events';
 import { isMobile } from 'lib/devices';
 import isHover from 'lib/dom/isHover';
@@ -19,6 +19,8 @@ const TAIL_CONVERGENCE_THRESHOLD = 0.01;
 const SMOOTH_INDEX_DELTA_THRESHOLD = 0.00001;
 const MAX_FRAME_PERIOD = 70;
 const MIN_FRAME_PERIOD = 5;
+const RELEASE_SWIPE_MAGIC_NUMBER = 10;
+const SWIPE_MODE_CHAGE_PERIOD_UNIT = 16;
 
 export default class LivephotoPlayer {
   constructor(params) {
@@ -57,6 +59,11 @@ export default class LivephotoPlayer {
     this.gyro = null;
     this.lastIndexDelta = 0;
     this.lastIndexDeltas = fill(Array(LIVEPHOTO_DEFAULT.MOVE_BUFFER_SIZE), 0);
+    this.swipe = {
+      mode: SWIPE_MODE.RELEASE,
+      isWaitNoneToRelease: false,
+      noneToReleaseTimeout: null,
+    };
 
     // Member variables for auto play
     this.autoPlayDir = AUTO_PLAY_DIR.STL;
@@ -328,11 +335,18 @@ export default class LivephotoPlayer {
   }
 
   getPixelDelta(startPixel, endPixel) {
-    return (
-      this.direction === DIRECTION.HORIZONTAL ?
-      endPixel.x - startPixel.x :
-      endPixel.y - startPixel.y
-    );
+    let pixelDelta = 0;
+
+    if (this.swipe.mode !== SWIPE_MODE.NONE) {
+      const delta =
+        this.direction === DIRECTION.HORIZONTAL ?
+        endPixel.x - startPixel.x :
+        endPixel.y - startPixel.y;
+      pixelDelta =
+        this.swipe.mode === SWIPE_MODE.HOLD ? delta : delta / RELEASE_SWIPE_MAGIC_NUMBER;
+    }
+
+    return pixelDelta;
   }
 
   getPixelIndexDelta() {
@@ -388,28 +402,54 @@ export default class LivephotoPlayer {
     ctx.clearRect(0, 0, container.width, container.height);
   }
 
+  startWaitNoneToReleaseSwipe() {
+    const period =
+      LIVEPHOTO_DEFAULT.MOVE_BUFFER_SIZE * SWIPE_MODE_CHAGE_PERIOD_UNIT;
+    this.swipe.isWaitNoneToRelease = true;
+    this.swipe.noneToReleaseTimeout = setTimeout(() => {
+      this.stopWaitNoneToReleaseSwipe();
+      this.swipe.mode = SWIPE_MODE.RELEASE;
+    }, period);
+  }
+
+  stopWaitNoneToReleaseSwipe() {
+    clearTimeout(this.swipe.noneToReleaseTimeout);
+    this.swipe.noneToReleaseTimeout = null;
+    this.swipe.isWaitNoneToRelease = false;
+  }
+
   handleRotation = (rotation) => {
     this.curRotation = rotation;
   }
 
   handleTransitionStart = (e) => {
-    if (this.isLeftBtnPressed(e)) {
-      this.curPixel = getPosition(e);
+    // Left button is clicked (for mouse) or finger is pressed (for touch)
+    if (this.isHold(e)) {
+      this.curPixel = null;
+      this.swipe.mode = SWIPE_MODE.HOLD;
+      if (this.swipe.isWaitNoneToRelease) {
+        this.stopWaitNoneToReleaseSwipe();
+      }
     }
   }
 
   handleTransitionMove = (e) => {
-    // Left button is clicked.
-    if (this.isLeftBtnPressed(e)) {
+    if (this.swipe.mode !== SWIPE_MODE.NONE) {
       this.curPixel = getPosition(e);
+    } else {
+      this.curPixel = null;
     }
   }
 
   handleTransitionEnd = () => {
     this.curPixel = null;
+    if (this.swipe.mode === SWIPE_MODE.HOLD) {
+      this.swipe.mode = SWIPE_MODE.NONE;
+      this.startWaitNoneToReleaseSwipe();
+    }
   }
 
-  isLeftBtnPressed(e) {
+  isHold(e) {
     return (
       isMobile() ?
       true :
