@@ -5,6 +5,8 @@ function deserialize(value) {
     return false;
   } else if (value === 'null') {
     return null;
+  } else if (value === 'undefined') {
+    return undefined;
   } else if (!isNaN(parseFloat(value)) && isFinite(value)) {
     return parseFloat(value);
   }

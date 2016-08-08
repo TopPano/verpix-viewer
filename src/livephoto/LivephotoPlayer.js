@@ -9,7 +9,7 @@ import { DIRECTION } from 'constants/common';
 import { LIVEPHOTO_DEFAULT, PLAY_MODE, SWIPE_MODE, AUTO_PLAY_DIR } from 'constants/livephoto';
 import EVENTS from 'constants/events';
 import { isMobile } from 'lib/devices';
-import isHover from 'lib/dom/isHover';
+import { isHover } from 'lib/dom';
 import { getPosition } from 'lib/events/click';
 import Gyro from './Gyro';
 

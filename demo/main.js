@@ -21,10 +21,11 @@ function enableGenBtn() {
 
 function addPost(postId) {
   const label = document.createElement('H3');
-  const wrapper = document.createElement('DIV');
+  const params = {
+    id: postId,
+  };
 
-  wrapper.setAttribute('data-id', postId);
-  window.verpix.createLivephoto(wrapper, (err, instance) => {
+  window.verpix.createLivephoto(params, (err, instance) => {
     const msgBox = document.getElementById('add-msg');
     if (err) {
       msgBox.value = err;
@@ -35,7 +36,7 @@ function addPost(postId) {
       addedPostIds.push(postId);
       label.innerHTML = `${addedPostIds.length}. ${postId}`;
       document.body.appendChild(label);
-      document.body.appendChild(wrapper);
+      document.body.appendChild(instance.root);
       msgBox.value = `Post "${postId}" is added`;
       instance.start();
     }
