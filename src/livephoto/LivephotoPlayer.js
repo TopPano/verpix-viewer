@@ -56,6 +56,8 @@ export default class LivephotoPlayer {
     this.gyro = null;
     this.lastRotationIndexDelta = 0;
     this.lastIndexDeltas = fill(Array(LIVEPHOTO_DEFAULT.MOVE_BUFFER_SIZE), 0);
+    this.updateTimer = null;
+    this.animationTimer = null;
     this.swipe = {
       mode: SWIPE_MODE.RELEASE,
       isWaitNoneToRelease: false,
@@ -164,6 +166,8 @@ export default class LivephotoPlayer {
     if (isMobile()) {
       this.gyro.stop();
     }
+    this.clearAnimationTimer();
+    this.clearUpdateTimer();
     this.clearContainer();
     this.resetMemberVars();
   }
@@ -274,7 +278,7 @@ export default class LivephotoPlayer {
     this.lastPixel = this.curPixel;
     this.lastRotation = this.curRotation;
 
-    raf(this.updateIndexDelta);
+    this.updateTimer = raf(this.updateIndexDelta);
   }
 
   onAnimationFrame = () => {
@@ -306,9 +310,9 @@ export default class LivephotoPlayer {
     }
 
     if (nextFramePeriod > 0) {
-      setTimeout(this.onAnimationFrame, nextFramePeriod);
+      this.animationTimer = setTimeout(this.onAnimationFrame, nextFramePeriod);
     } else {
-      raf(this.onAnimationFrame);
+      this.animationTimer = raf(this.onAnimationFrame);
     }
   }
 
@@ -393,6 +397,17 @@ export default class LivephotoPlayer {
       newPhoto = this.numPhotos - 1;
     }
     this.renderPhoto(newPhoto);
+  }
+
+  clearAnimationTimer() {
+    clearTimeout(this.animationTimer);
+    raf.cancel(this.animationTimer);
+    this.animationTimer = null;
+  }
+
+  clearUpdateTimer() {
+    raf.cancel(this.updateTimer);
+    this.updateTimer = null;
   }
 
   clearContainer() {
