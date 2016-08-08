@@ -54,7 +54,7 @@ export default class LivephotoPlayer {
     this.lastRotation = null;
     this.curRotation = null;
     this.gyro = null;
-    this.lastIndexDelta = 0;
+    this.lastRotationIndexDelta = 0;
     this.lastIndexDeltas = fill(Array(LIVEPHOTO_DEFAULT.MOVE_BUFFER_SIZE), 0);
     this.swipe = {
       mode: SWIPE_MODE.RELEASE,
@@ -261,13 +261,14 @@ export default class LivephotoPlayer {
         this.startWaitAutoToManual();
       }
     } else if (this.playMode === PLAY_MODE.MANUAL) {
-      indexDelta = pixelIndexDelta + rotationIndexDelta;
+      // TODO: please use both pixelIndexDelta and rotationIndexDelta
+      indexDelta = pixelIndexDelta;
       this.countToAutoPlay -= absIndexDelta;
       if (LIVEPHOTO_DEFAULT.AUTO_PLAY_ENABLED && !this.isWaitManualToAuto && !isHovering) {
         this.startWaitManualToAuto();
       }
     }
-    this.lastIndexDelta = indexDelta;
+    this.lastRotationIndexDelta = rotationIndexDelta;
     this.pushLastIndexDelta(indexDelta);
 
     this.lastPixel = this.curPixel;
@@ -285,7 +286,7 @@ export default class LivephotoPlayer {
       nextFramePeriod = Math.round(1000 / LIVEPHOTO_DEFAULT.AUTO_PLAY_RATE);
       move = Math.round(smoothIndexDelta);
     } else if (this.playMode === PLAY_MODE.MANUAL) {
-      if (!isMobile()) {
+      if (!isMobile() || Math.abs(this.lastRotationIndexDelta) < 0.5) {
         if (Math.abs(smoothIndexDelta) > SMOOTH_INDEX_DELTA_THRESHOLD) {
           move = (smoothIndexDelta < 0) ? -1 : 1;
           nextFramePeriod = this.clamp(
@@ -295,8 +296,8 @@ export default class LivephotoPlayer {
           );
         }
       } else {
-        // TODO: also apply smooth index delta on mobile
-        move = Math.round(this.lastIndexDelta);
+        // TODO: also apply smooth rotation index delta on mobile
+        move = Math.round(this.lastRotationIndexDelta);
       }
     }
 
