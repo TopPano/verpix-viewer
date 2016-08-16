@@ -10,6 +10,7 @@ export default function createCanvas(root, canvasDimension, wrapperDimension) {
   // TODO: How to pass the no-param-reassign rule from eslint ?
   root.style.width = `${wrapperDimension.width}px`;
   root.style.maxWidth = '100%';
+  root.style.overflow = 'hidden';
 
   // Styles for outter wrapper
   outWrapper.style.width = '100%';
