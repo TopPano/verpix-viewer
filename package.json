@@ -17,6 +17,7 @@
     "query-string": "4.2.2",
     "raf": "3.2.0",
     "redux": "3.5.2",
+    "three": "0.79.0",
     "whatwg-fetch": "1.0.0"
   },
   "devDependencies": {

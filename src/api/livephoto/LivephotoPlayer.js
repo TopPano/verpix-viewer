@@ -3,6 +3,7 @@
 import fill from 'lodash/fill';
 import isFunction from 'lodash/isFunction';
 import inRange from 'lodash/inRange';
+import clamp from 'lodash/clamp';
 import raf from 'raf';
 
 import { DIRECTION } from 'constants/common';
@@ -293,7 +294,7 @@ export default class LivephotoPlayer {
       if (!isMobile() || Math.abs(this.lastRotationIndexDelta) < 0.5) {
         if (Math.abs(smoothIndexDelta) > SMOOTH_INDEX_DELTA_THRESHOLD) {
           move = (smoothIndexDelta < 0) ? -1 : 1;
-          nextFramePeriod = this.clamp(
+          nextFramePeriod = clamp(
             Math.abs(Math.round(50 / smoothIndexDelta)),
             MIN_FRAME_PERIOD,
             MAX_FRAME_PERIOD
@@ -481,9 +482,5 @@ export default class LivephotoPlayer {
       true :
       (e.which && e.button === 0) || (e.button && e.button === 0)
     );
-  }
-
-  clamp(val, min, max) {
-    return Math.min(Math.max(val, min), max);
   }
 }

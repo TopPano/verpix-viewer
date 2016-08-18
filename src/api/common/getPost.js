@@ -1,6 +1,11 @@
 import fetch from 'isomorphic-fetch';
+import config from 'config';
 
-export default function getPost(url) {
+const API_ROOT = config.apiRoot;
+
+export default function getPost(postId) {
+  const url = `${API_ROOT}/posts/${postId}`;
+
   return fetch(url).then((res) => {
     if (res.status >= 400) {
       throw new Error(res);

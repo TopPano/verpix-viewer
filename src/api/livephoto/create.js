@@ -1,13 +1,10 @@
 import isFunction from 'lodash/isFunction';
 
-import config from 'config';
 import { getDataAttribute, setDataAttribute } from 'lib/dom';
+import optimizeMobile from '../common/optimizeMobile';
+import getPost from '../common/getPost';
 import createCanvas from './createCanvas';
-import getPost from './getPost';
 import LivephotoPlayer from './LivephotoPlayer';
-import optimizeMobile from './optimizeMobile';
-
-const API_ROOT = config.apiRoot;
 
 function getWrapperDimension(root, origDimension) {
   let width = origDimension.width;
@@ -49,8 +46,7 @@ export default function create(params, callback) {
     setDataAttribute(root, 'height', params.height);
   }
 
-  const url = `${API_ROOT}/posts/${postId}`;
-  getPost(url).then((post) => {
+  getPost(postId).then((post) => {
     const wrapperDimension = getWrapperDimension(root, post.dimension);
     const container = createCanvas(root, post.dimension, wrapperDimension);
 
