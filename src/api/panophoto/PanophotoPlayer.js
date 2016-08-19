@@ -3,6 +3,7 @@
 import THREE from 'three';
 import sortBy from 'lodash/sortBy';
 import clamp from 'lodash/clamp';
+import fill from 'lodash/fill';
 import raf from 'raf';
 
 import { PARAMS_DEFAULT } from 'constants/panophoto';
@@ -14,11 +15,19 @@ const SPHERE_RADIUS = 1000;
 const LAT_MAX = 85;
 const LAT_MIN = -85;
 
+const SWIPE = {
+  BUFFER_SIZE: 20,
+  DELTA_FACTOR: 0.0008,
+  SMOOTH_DELTA_THRESHOLD: 0.000001,
+  PREVENT_STOP_MAGIC_NUMBER: 0.95,
+};
+
 export default class PanophotoPlayer {
   constructor(params) {
     // Read only member variables
     this.container = params.container;
     this.photosSrcUrl = params.photosSrcUrl;
+    this.swipeDeltaMagicNumber = PARAMS_DEFAULT.SWIPE_SENSITIVITY * SWIPE.DELTA_FACTOR;
   }
 
   // Entry function for starting
@@ -42,19 +51,16 @@ export default class PanophotoPlayer {
     this.camera = {
       instance: null,
       lat: 0,
-      virtualLat: 0,
       lng: 0,
-      phi: 0,
-      theta: 0,
     };
     // Swipe position and delta of swipe
     this.swipe = {
       lastPos: null,
       curPos: null,
-      lastDelta: {
+      lastDeltas: fill(Array(SWIPE.BUFFER_SIZE), {
         x: 0,
         y: 0,
-      },
+      }),
     };
     // The timer for re-rendering
     this.animationTimer = null;
@@ -202,17 +208,21 @@ export default class PanophotoPlayer {
 
   // Update camera related variables and re-render
   onAnimationFrame = () => {
-    const newLng = this.camera.lng + (this.swipe.lastDelta.x * 0.1);
-    const newLat = this.camera.lat + (this.swipe.lastDelta.y * 0.1);
+    // Update longitude and latitude
+    const swipeDelta = this.getSmoothSwipeDelta();
+    const newLng = this.camera.lng - (swipeDelta.x * this.swipeDeltaMagicNumber);
+    const newLat = this.camera.lat + (swipeDelta.y * this.swipeDeltaMagicNumber);
     this.camera.lng = (newLng + 360) % 360;
     this.camera.lat = clamp(newLat, LAT_MIN, LAT_MAX);
-    this.camera.phi = THREE.Math.degToRad(90 - this.camera.lat);
-    this.camera.theta = THREE.Math.degToRad(this.camera.lng);
+
+    // Get theta and phi
+    const theta = THREE.Math.degToRad(this.camera.lng);
+    const phi = THREE.Math.degToRad(90 - this.camera.lat);
 
     // y: up
-    this.camera.instance.target.x = Math.sin(this.camera.phi) * Math.cos(this.camera.theta);
-    this.camera.instance.target.y = Math.cos(this.camera.phi);
-    this.camera.instance.target.z = Math.sin(this.camera.phi) * Math.sin(this.camera.theta);
+    this.camera.instance.target.x = Math.sin(phi) * Math.cos(theta);
+    this.camera.instance.target.y = Math.cos(phi);
+    this.camera.instance.target.z = Math.sin(phi) * Math.sin(theta);
     this.camera.instance.lookAt(this.camera.instance.target);
 
     const vectTargetOnXZ =
@@ -233,9 +243,6 @@ export default class PanophotoPlayer {
     this.camera.instance.up.y = vectCameraUp.y;
     this.camera.instance.up.z = vectCameraUp.z;
 
-    // mainly for changing this.camera.instance.fov
-    this.camera.instance.updateProjectionMatrix();
-
     // Re-render
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera.instance);
@@ -253,18 +260,56 @@ export default class PanophotoPlayer {
 
   // Update last position and delta of swipe
   updateSwipe() {
+    let lastDelta;
     if (this.swipe.curPos !== null && this.swipe.lastPos !== null) {
-      this.swipe.lastDelta = {
+      lastDelta = {
         x: this.swipe.curPos.x - this.swipe.lastPos.x,
         y: this.swipe.curPos.y - this.swipe.lastPos.y,
       };
     } else {
-      this.swipe.lastDelta = {
+      lastDelta = {
         x: 0,
         y: 0,
       };
     }
+    this.updateSwipeDelta(lastDelta);
     this.swipe.lastPos = this.swipe.curPos;
+  }
+
+  // Push last swipe delta to buffer
+  updateSwipeDelta(lastDelta) {
+    const newDelta = {
+      x: lastDelta.x,
+      y: lastDelta.y,
+    };
+
+    // Prevent suddently stopping
+    if (newDelta.x === 0 && Math.abs(this.swipe.lastDeltas[0].x) > SWIPE.SMOOTH_DELTA_THRESHOLD) {
+      newDelta.x = this.swipe.lastDeltas[0].x * SWIPE.PREVENT_STOP_MAGIC_NUMBER;
+    }
+    if (newDelta.y === 0 && Math.abs(this.swipe.lastDeltas[0].y) > SWIPE.SMOOTH_DELTA_THRESHOLD) {
+      newDelta.y = this.swipe.lastDeltas[0].y * SWIPE.PREVENT_STOP_MAGIC_NUMBER;
+    }
+
+    // Remove the oldest swipe delta
+    this.swipe.lastDeltas.pop();
+    // Add the newest swipe delta
+    this.swipe.lastDeltas.unshift(newDelta);
+  }
+
+  // Get Smooth swipe delta
+  getSmoothSwipeDelta() {
+    const sum = this.swipe.lastDeltas.reduce((previous, current) => ({
+      x: current.x + previous.x,
+      y: current.y + previous.y,
+    }));
+    const length = this.swipe.lastDeltas.length;
+    const avg = {
+      x: sum.x / length,
+      y: sum.y / length,
+    };
+
+    return avg;
   }
 
   // Handler for swipe starting
