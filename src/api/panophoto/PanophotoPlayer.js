@@ -7,9 +7,10 @@ import fill from 'lodash/fill';
 import raf from 'raf';
 
 import { PARAMS_DEFAULT } from 'constants/panophoto';
-import { isMobile } from 'lib/devices';
+import { isMobile, isIOS } from 'lib/devices';
 import { getPosition } from 'lib/events/click';
 import EVENTS from 'constants/events';
+import GyroNorm from 'external/gyronorm';
 
 const SPHERE_RADIUS = 1000;
 const LAT_MAX = 85;
@@ -22,12 +23,19 @@ const SWIPE = {
   PREVENT_STOP_MAGIC_NUMBER: 0.95,
 };
 
+const ROTATION = {
+  // TODO: test for more devices, to use different factor
+  DELTA_FACTOR: isIOS() ? 0.00025 : 0.0125,
+};
+
 export default class PanophotoPlayer {
   constructor(params) {
+    isIOS();
     // Read only member variables
     this.container = params.container;
     this.photosSrcUrl = params.photosSrcUrl;
     this.swipeDeltaMagicNumber = PARAMS_DEFAULT.SWIPE_SENSITIVITY * SWIPE.DELTA_FACTOR;
+    this.rotationDeltaMagicNumber = PARAMS_DEFAULT.ROTATION_SENSITIVITY * ROTATION.DELTA_FACTOR;
   }
 
   // Entry function for starting
@@ -53,7 +61,7 @@ export default class PanophotoPlayer {
       lat: 0,
       lng: 0,
     };
-    // Swipe position and delta of swipe
+    // Position and delta of swipe
     this.swipe = {
       lastPos: null,
       curPos: null,
@@ -62,10 +70,20 @@ export default class PanophotoPlayer {
         y: 0,
       }),
     };
+    // Position and delta of rotation
+    this.rotation = {
+      gyro: null,
+      lastDelta: {
+        x: 0,
+        y: 0,
+      },
+    };
     // The timer for re-rendering
     this.animationTimer = null;
     // The timer for updating pixel delta
     this.updateTimer = null;
+    // Dimension includes width and height of container, window orientation (portrait or landscape)
+    this.updateDimension();
   }
 
   // Start playing
@@ -90,10 +108,19 @@ export default class PanophotoPlayer {
 
   // Add handlers for DOM events
   addEventHandlers() {
+    this.addCommonHandlers();
     this.addSwipeHandlers();
     if (!isMobile()) {
       this.addWheelHandlers();
+    } else {
+      // TODO: also add handlers for adjusting fov
+      this.addRotationHandlers();
     }
+  }
+
+  // Add handlers for common events, such as device orientation
+  addCommonHandlers() {
+    window.addEventListener('deviceorientation', this.handleDeviceOrientation);
   }
 
   // Add handlers for swipe (click or touch)
@@ -112,18 +139,44 @@ export default class PanophotoPlayer {
     });
   }
 
+  // Add handlers for gyroscope rotation
+  addRotationHandlers() {
+    const args = {
+      frequency: 70,
+      orientationBase: GyroNorm.WORLD,
+      screenAdjusted: true,
+    };
+    this.rotation.gyro = new GyroNorm();
+    this.rotation.gyro.init(args).then(() => {
+      this.rotation.gyro.start((data) => {
+        let delta;
+        // TODO: in fact, data.dm is acceleration, not rotation delta
+        if (this.dimension.isPortrait) {
+          delta = {
+            x: data.dm.beta,
+            y: data.dm.alpha,
+          };
+        } else {
+          delta = {
+            x: data.dm.alpha,
+            y: -data.dm.gamma,
+          };
+        }
+        this.updateRotation(delta);
+      });
+    }).catch(() => {
+      // TODO: error handling
+    });
+  }
+
   // Setup (perspective) camera
   setupCamera() {
-    const dimension = this.getContainerDimension();
-
     this.camera.instance = new THREE.PerspectiveCamera(
       Math.round((PARAMS_DEFAULT.FOV_MIN + PARAMS_DEFAULT.FOV_MAX) / 2), // field of view (vertical)
-      dimension.width / dimension.height, // aspect ratio
+      this.dimension.width / this.dimension.height, // aspect ratio
       0.1, // near plane
       SPHERE_RADIUS + 100 // far plane
     );
-    // Change position of camera
-    this.camera.instance.target = new THREE.Vector3(SPHERE_RADIUS, SPHERE_RADIUS, SPHERE_RADIUS);
   }
 
   // Setup scene for rendering
@@ -139,8 +192,6 @@ export default class PanophotoPlayer {
       autoClearColor: false,
       alpha: true,
     };
-    // The dimension for rendering
-    const dimension = this.getContainerDimension();
 
     // TODO: Use CanvasRenderer for browser without WebGL support
     this.renderer = new THREE.WebGLRenderer(webGLRendererParams);
@@ -148,7 +199,7 @@ export default class PanophotoPlayer {
     this.renderer.autoClear = false;
     // this.renderer.autoClearColor = false;
     this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(dimension.width, dimension.height);
+    this.renderer.setSize(this.dimension.width, this.dimension.height);
 
     this.container.appendChild(this.renderer.domElement);
   }
@@ -210,38 +261,29 @@ export default class PanophotoPlayer {
   onAnimationFrame = () => {
     // Update longitude and latitude
     const swipeDelta = this.getSmoothSwipeDelta();
-    const newLng = this.camera.lng - (swipeDelta.x * this.swipeDeltaMagicNumber);
-    const newLat = this.camera.lat + (swipeDelta.y * this.swipeDeltaMagicNumber);
+    const rotationDelta = this.getRotationDelta();
+    const newLng =
+      this.camera.lng
+      - (swipeDelta.x * this.swipeDeltaMagicNumber)
+      - (rotationDelta.x * this.rotationDeltaMagicNumber);
+    const newLat =
+      this.camera.lat
+      + (rotationDelta.y * this.rotationDeltaMagicNumber)
+      + (swipeDelta.y * this.swipeDeltaMagicNumber);
     this.camera.lng = (newLng + 360) % 360;
     this.camera.lat = clamp(newLat, LAT_MIN, LAT_MAX);
 
-    // Get theta and phi
+    // Get theta (from longitude) and phi (from latitude)
     const theta = THREE.Math.degToRad(this.camera.lng);
     const phi = THREE.Math.degToRad(90 - this.camera.lat);
 
-    // y: up
-    this.camera.instance.target.x = Math.sin(phi) * Math.cos(theta);
-    this.camera.instance.target.y = Math.cos(phi);
-    this.camera.instance.target.z = Math.sin(phi) * Math.sin(theta);
-    this.camera.instance.lookAt(this.camera.instance.target);
-
-    const vectTargetOnXZ =
-      new THREE.Vector3(this.camera.instance.target.x, 0, this.camera.instance.target.z);
-    const vectCameraUp = new THREE.Vector3(0, 1, 0);
-    let normalVect = new THREE.Vector3();
-    normalVect.crossVectors(vectTargetOnXZ, vectCameraUp);
-    normalVect = normalVect.normalize();
-    vectCameraUp.applyAxisAngle(normalVect, (Math.PI / 180) * (this.camera.lat));
-
-    /*
-    vectCameraUp.applyAxisAngle(
-      this.camera.instance.target,
-      (Math.PI / 180) * this.gyro.screenRotationAngle
+    // Change look position of camera
+    const target = new THREE.Vector3(
+      Math.sin(phi) * Math.cos(theta), // x
+      Math.cos(phi), // y
+      Math.sin(phi) * Math.sin(theta) // z
     );
-    */
-    this.camera.instance.up.x = vectCameraUp.x;
-    this.camera.instance.up.y = vectCameraUp.y;
-    this.camera.instance.up.z = vectCameraUp.z;
+    this.camera.instance.lookAt(target);
 
     // Re-render
     this.renderer.clear();
@@ -297,7 +339,7 @@ export default class PanophotoPlayer {
     this.swipe.lastDeltas.unshift(newDelta);
   }
 
-  // Get Smooth swipe delta
+  // Get smooth swipe delta
   getSmoothSwipeDelta() {
     const sum = this.swipe.lastDeltas.reduce((previous, current) => ({
       x: current.x + previous.x,
@@ -310,6 +352,16 @@ export default class PanophotoPlayer {
     };
 
     return avg;
+  }
+
+  // Update last delta of rotation
+  updateRotation(delta) {
+    this.rotation.lastDelta = delta;
+  }
+
+  // Get rotation delta
+  getRotationDelta() {
+    return this.rotation.lastDelta;
   }
 
   // Handler for swipe starting
@@ -347,6 +399,37 @@ export default class PanophotoPlayer {
     const newFov = this.camera.instance.fov + delta;
     this.camera.instance.fov = clamp(newFov, PARAMS_DEFAULT.FOV_MIN, PARAMS_DEFAULT.FOV_MAX);
     this.camera.instance.updateProjectionMatrix();
+  }
+
+  // Handler for device orientation event
+  handleDeviceOrientation = () => {
+    this.updateDimension();
+  }
+
+  // Update container width, height, and window orientation
+  updateDimension() {
+    const isPortrait = this.isPortrait();
+    const containerDimension = this.getContainerDimension();
+    this.dimension = {
+      isPortrait,
+      width: containerDimension.width,
+      height: containerDimension.height,
+    };
+  }
+
+  // Return the window orientation is portrait or not
+  isPortrait() {
+    let isPortrait = true;
+
+    if (window.orientation) {
+      isPortrait = (window.orientation === 0 || window.orientation === 180);
+    } else if (window.innerHeight !== null && window.innerWidth !== null) {
+      isPortrait = window.innerHeight > window.innerWidth;
+    } else {
+      // TODO: any other case ?
+    }
+
+    return isPortrait;
   }
 
   // Get the dimension (width and height) of container

@@ -135,6 +135,7 @@ const config = {
     alias: {
       constants: 'src/constants',
       lib: 'src/lib',
+      external: 'external',
       config: 'config'
     }
   },
