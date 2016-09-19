@@ -18,6 +18,10 @@ if (isMobile()) {
     CLICK_MOVE: 'mousemove',
     CLICK_END: 'mouseup',
     CLICK_CANCEL: 'mouseout',
+    WHEEL: [
+      'mousewheel', // IE9, Chrome, Safari, Opera
+      'DOMMouseScroll', // Firefox
+    ],
   });
 }
 

@@ -5111,6 +5111,11 @@
       "from": "tfunk@>=3.0.1 <4.0.0",
       "resolved": "https://registry.npmjs.org/tfunk/-/tfunk-3.0.2.tgz"
     },
+    "three": {
+      "version": "0.79.0",
+      "from": "three@latest",
+      "resolved": "https://registry.npmjs.org/three/-/three-0.79.0.tgz"
+    },
     "through": {
       "version": "2.3.8",
       "from": "through@>=2.3.6 <3.0.0",

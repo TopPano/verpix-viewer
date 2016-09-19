@@ -22,7 +22,9 @@ const config = {
 
   // The entry point for the bundle
   entry: {
-    sdk: './src/main.js',
+    'sdk': './src/main.js',
+    'sdk-livephoto': ['./src/livephoto.js'],
+    'sdk-panorama': ['./src/panorama.js'],
     demo: './demo/main.js'
   },
 
@@ -30,7 +32,7 @@ const config = {
   output: {
     path: path.resolve(__dirname, './public/dist'),
     publicPath: isDebug ? '/dist/' : '',
-    filename: isDebug ? '[name].js?[hash]' : 'verpix-[name].js',
+    filename: isDebug ? '[name].js?[hash]' : '[name].js',
     chunkFilename: isDebug ? '[id].js?[chunkhash]' : '[id].[chunkhash].js',
     sourcePrefix: '  ',
   },
@@ -133,6 +135,7 @@ const config = {
     alias: {
       constants: 'src/constants',
       lib: 'src/lib',
+      external: 'external',
       config: 'config'
     }
   },
