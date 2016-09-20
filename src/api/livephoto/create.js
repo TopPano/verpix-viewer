@@ -1,6 +1,5 @@
-import isFunction from 'lodash/isFunction';
-
 import { getDataAttribute, setDataAttribute } from 'lib/dom';
+import execute from 'lib/utils/execute';
 import optimizeMobile from '../common/optimizeMobile';
 import getMedia from '../common/getMedia';
 import createCanvas from './createCanvas';
@@ -69,16 +68,12 @@ export default function create(params, callback) {
       direction: dimension.direction,
     });
     optimizeMobile(root);
-    if (isFunction(callback)) {
-      callback(null, {
-        root,
-        start: player.start,
-        stop: player.stop,
-      });
-    }
+    execute(callback, null, {
+      root,
+      start: player.start,
+      stop: player.stop,
+    });
   }).catch((err) => {
-    if (isFunction(callback)) {
-      callback(err);
-    }
+    execute(callback, err);
   });
 }

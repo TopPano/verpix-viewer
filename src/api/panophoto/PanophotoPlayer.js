@@ -9,6 +9,7 @@ import raf from 'raf';
 import { PARAMS_DEFAULT } from 'constants/panophoto';
 import { isMobile, isIOS } from 'lib/devices';
 import { getPosition } from 'lib/events/click';
+import execute from 'lib/utils/execute';
 import EVENTS from 'constants/events';
 import GyroNorm from 'external/gyronorm';
 
@@ -221,7 +222,7 @@ export default class PanophotoPlayer {
         this.addMesh(texture, index);
         count++;
         if (count === imgs.length) {
-          callback();
+          execute(callback);
         }
       }, () => {
         // TODO: function called when download progresses
