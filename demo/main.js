@@ -22,10 +22,9 @@ function enableGenBtn() {
 function addPost(postId) {
   const label = document.createElement('H3');
   const params = {
-    id: postId,
   };
 
-  window.verpix.createLivephoto(params, (err, instance) => {
+  window.verpix.createLivephoto(postId, params, (err, instance) => {
     const msgBox = document.getElementById('add-msg');
     if (err) {
       msgBox.value = err;
@@ -52,17 +51,6 @@ function handleClickAddBtn(e) {
 }
 
 window.addEventListener('load', () => {
-  const params = {
-    id: 'ab4bc31a64a2e800',
-    width: 1200,
-    height: 800,
-  };
-  window.verpix.createPanophoto(params, (err, instance) => {
-    if (!err) {
-      document.body.appendChild(instance.root);
-      instance.start();
-    }
-  });
   const querys = queryString.parse(location.search);
   if (querys.viewOnly === 'on') {
     // Non-editable mode

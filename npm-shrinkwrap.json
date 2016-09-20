@@ -683,9 +683,9 @@
       "resolved": "https://registry.npmjs.org/block-stream/-/block-stream-0.0.9.tgz"
     },
     "bluebird": {
-      "version": "3.4.1",
+      "version": "3.4.6",
       "from": "bluebird@>=3.1.1 <4.0.0",
-      "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.4.1.tgz"
+      "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.4.6.tgz"
     },
     "bn.js": {
       "version": "4.11.5",
@@ -2507,6 +2507,11 @@
       "version": "1.0.0",
       "from": "is-builtin-module@>=1.0.0 <2.0.0",
       "resolved": "https://registry.npmjs.org/is-builtin-module/-/is-builtin-module-1.0.0.tgz"
+    },
+    "is-dom": {
+      "version": "1.0.5",
+      "from": "is-dom@latest",
+      "resolved": "https://registry.npmjs.org/is-dom/-/is-dom-1.0.5.tgz"
     },
     "is-dotfile": {
       "version": "1.0.2",

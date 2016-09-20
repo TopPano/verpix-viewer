@@ -13,10 +13,9 @@ window.addEventListener('load', () => {
   const roots = document.getElementsByClassName('verpix-livephoto');
   forEach(roots, (root) => {
     const params = {
-      root,
     };
 
-    livephoto.create(params, (err, instance) => {
+    livephoto.create(root, params, (err, instance) => {
       if (err) {
         // TODO: Error handling
       } else {

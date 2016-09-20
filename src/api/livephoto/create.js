@@ -1,3 +1,6 @@
+import isDom from 'is-dom';
+import isString from 'lodash/isString';
+
 import { getDataAttribute, setDataAttribute } from 'lib/dom';
 import execute from 'lib/utils/execute';
 import optimizeMobile from '../common/optimizeMobile';
@@ -36,21 +39,29 @@ function getWrapperDimension(root, origDimension) {
   };
 }
 
-export default function create(params, callback) {
+export default function create(source, {
+  width,
+  height,
+}, callback) {
   let root;
   let mediaId;
 
-  // TODO: Check params.root is DOM element instead of just check it is defined
-  if (params.root) {
-    root = params.root;
+  if (isDom(source)) {
+    // Source is a dom element, just use it.
+    root = source;
     mediaId = getDataAttribute(root, 'id');
-  } else {
+  } else if (isString(source)) {
+    // Source is a string, use it as media ID.
     root = document.createElement('DIV');
-    // TODO: types & values check for parameters
-    mediaId = params.id;
-    setDataAttribute(root, 'id', params.id);
-    setDataAttribute(root, 'width', params.width);
-    setDataAttribute(root, 'height', params.height);
+    mediaId = source;
+    setDataAttribute(root, 'id', source);
+    setDataAttribute(root, 'width', width);
+    setDataAttribute(root, 'height', height);
+  } else {
+    execute(
+      callback,
+      new Error('Required argument `source` must be DOM element, string or array of string'
+    ));
   }
 
   getMedia(mediaId).then((media) => {
