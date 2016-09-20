@@ -1,3 +1,3 @@
 export default {
-  apiRoot: 'http://demo.verpix.me/api'
+  fetchRoot: 'http://demo.verpix.me/api'
 };

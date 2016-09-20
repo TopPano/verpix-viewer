@@ -5,7 +5,7 @@ import isFunction from 'lodash/isFunction';
 import { getDataAttribute, setDataAttribute } from 'lib/dom';
 import PanophotoPlayer from './PanophotoPlayer';
 import optimizeMobile from '../common/optimizeMobile';
-import getPost from '../common/getPost';
+import getMedia from '../common/getMedia';
 
 function setRootStyle(root, style) {
   // TODO: How to pass the no-param-reassign rule from eslint ?
@@ -16,7 +16,7 @@ function setRootStyle(root, style) {
 
 export default function create(params, callback) {
   let root;
-  let postId;
+  let mediaId;
   let width;
   let height;
 
@@ -24,13 +24,13 @@ export default function create(params, callback) {
   if (params.root) {
     root = params.root;
     // TODO: types & values check for attributes
-    postId = getDataAttribute(root, 'id');
+    mediaId = getDataAttribute(root, 'id');
     width = getDataAttribute(root, 'width');
     height = getDataAttribute(root, 'height');
   } else {
     root = document.createElement('DIV');
     // TODO: types & values check for parameters
-    postId = params.id;
+    mediaId = params.id;
     width = params.width;
     height = params.height;
     setDataAttribute(root, 'id', params.id);
@@ -38,13 +38,14 @@ export default function create(params, callback) {
     setDataAttribute(root, 'height', params.height);
   }
 
-  getPost(postId).then((post) => {
+  getMedia(mediaId).then((media) => {
     setRootStyle(root, { width, height });
 
     const player = new PanophotoPlayer({
       container: root,
-      photosSrcUrl: post.media.srcTiledImages,
-      direction: post.dimension.direction,
+      // TODO: fit new api format to construct photosSrcUrl
+      photosSrcUrl: media.media.srcTiledImages,
+      direction: media.dimension.direction,
     });
     optimizeMobile(root);
     if (isFunction(callback)) {

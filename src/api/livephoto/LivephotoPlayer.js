@@ -136,7 +136,7 @@ export default class LivephotoPlayer {
   getPhotoSrc(index) {
     return (
       inRange(index, this.numPhotos) ?
-      this.photosSrcUrl[index].downloadUrl :
+      this.photosSrcUrl[index] :
       ''
     );
   }

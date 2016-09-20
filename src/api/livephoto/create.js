@@ -2,9 +2,17 @@ import isFunction from 'lodash/isFunction';
 
 import { getDataAttribute, setDataAttribute } from 'lib/dom';
 import optimizeMobile from '../common/optimizeMobile';
-import getPost from '../common/getPost';
+import getMedia from '../common/getMedia';
 import createCanvas from './createCanvas';
+import constructPhotoUrls from './constructPhotoUrls';
 import LivephotoPlayer from './LivephotoPlayer';
+
+function getOriginalDimension(quality) {
+  return {
+    width: parseInt(quality.split('X')[0], 10),
+    height: parseInt(quality.split('X')[1], 10),
+  };
+}
 
 function getWrapperDimension(root, origDimension) {
   let width = origDimension.width;
@@ -31,29 +39,34 @@ function getWrapperDimension(root, origDimension) {
 
 export default function create(params, callback) {
   let root;
-  let postId;
+  let mediaId;
 
   // TODO: Check params.root is DOM element instead of just check it is defined
   if (params.root) {
     root = params.root;
-    postId = getDataAttribute(root, 'id');
+    mediaId = getDataAttribute(root, 'id');
   } else {
     root = document.createElement('DIV');
     // TODO: types & values check for parameters
-    postId = params.id;
+    mediaId = params.id;
     setDataAttribute(root, 'id', params.id);
     setDataAttribute(root, 'width', params.width);
     setDataAttribute(root, 'height', params.height);
   }
 
-  getPost(postId).then((post) => {
-    const wrapperDimension = getWrapperDimension(root, post.dimension);
-    const container = createCanvas(root, post.dimension, wrapperDimension);
+  getMedia(mediaId).then((media) => {
+    const { content, dimension } = media;
+    // TODO: Dynamically choose quality
+    const selectedQuality = content.quality[0];
+    const origDimension = getOriginalDimension(selectedQuality);
+    const wrapperDimension = getWrapperDimension(root, origDimension);
+    const photosSrcUrl = constructPhotoUrls(mediaId, content, selectedQuality);
+    const container = createCanvas(root, media.dimension, wrapperDimension);
 
     const player = new LivephotoPlayer({
       container,
-      photosSrcUrl: post.media.srcHighImages,
-      direction: post.dimension.direction,
+      photosSrcUrl,
+      direction: dimension.direction,
     });
     optimizeMobile(root);
     if (isFunction(callback)) {

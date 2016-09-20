@@ -1,10 +1,10 @@
 import fetch from 'isomorphic-fetch';
 import config from 'config';
 
-const API_ROOT = config.apiRoot;
+const FETCH_ROOT = config.fetchRoot;
 
-export default function getPost(postId) {
-  const url = `${API_ROOT}/posts/${postId}`;
+export default function getMedia(mediaId) {
+  const url = `${FETCH_ROOT}/media/${mediaId}`;
 
   return fetch(url).then((res) => {
     if (res.status >= 400) {
