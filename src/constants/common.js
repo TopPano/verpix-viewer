@@ -6,7 +6,8 @@ export const DIRECTION = {
 export const CREATE_METHOD = {
   DOM: 'DOM',
   ID: 'ID',
-  PHOTOS: 'PHOTOS',
+  PHOTOS_URLS: 'PHOTOS_URLS',
+  PHOTOS_DATA: 'PHOTOS_DATA',
   OTHERS: 'OTHERS',
 };
 

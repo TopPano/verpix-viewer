@@ -27,25 +27,23 @@ export default class LivephotoPlayer {
   constructor(params) {
     // Read only member variables
     this.container = params.container;
-    this.photosSrcUrl = params.photosSrcUrl;
-    this.numPhotos = this.photosSrcUrl.length;
     this.direction = params.direction;
-    this.playThreshold = this.numPhotos * LIVEPHOTO_DEFAULT.PLAY_THRESHOLD;
-    this.pixelStepMagicNumber = (100 - LIVEPHOTO_DEFAULT.SWIPE_SENSITIVITY) / 100;
-    this.rotationStepMagicNumber = (100 - LIVEPHOTO_DEFAULT.GYRO_SENSITIVITY) / 100;
-    this.rotationStepDistance =
-      (MAX_ROTATION_RANGE * this.rotationStepMagicNumber) / this.numPhotos;
-    this.thresholdToAutoPlay =
-      Math.round(LIVEPHOTO_DEFAULT.MANUAL_TO_AUTO_THRESHOLD / AUTO_PLAY_MAGIC_NUMBER);
-    this.thresholdToManualPlay =
-      Math.round(LIVEPHOTO_DEFAULT.AUTO_TO_MANUAL_THRESHOLD / AUTO_PLAY_MAGIC_NUMBER);
+    if (params.photosSrcUrl) {
+      this.setPhotosSrcUrl(params.photosSrcUrl);
+    } else if (params.photos) {
+      this.setPhotos(params.photos);
+    } else {
+      // TODO: error handling
+    }
   }
 
   // Initialize or reset writable member variables
   resetMemberVars() {
     // Member variables for common usage
-    this.photos = fill(Array(this.numPhotos), null);
-    this.numLoadedPhotos = 0;
+    if (this.photosSrcUrl) {
+      this.photos = fill(Array(this.numPhotos), null);
+      this.numLoadedPhotos = 0;
+    }
     this.isPlayerEnabled = false;
     this.pixelStepDistance = this.getNewPixelStepDistance();
     this.curPhoto = -1;
@@ -81,14 +79,51 @@ export default class LivephotoPlayer {
 
     // Start loading and rending photos
     const startIndex = Math.round(this.numPhotos / 2);
-    const loadStep = Math.round(LIVEPHOTO_DEFAULT.CONCURRENT_LOADING_PHOTOS / 2);
-    this.loadPhoto(startIndex, this.renderPhoto.bind(this, startIndex));
-    this.loadPhotos(startIndex - 1, -1, -loadStep);
-    this.loadPhotos(startIndex + 1, this.numPhotos, loadStep);
+
+    if (this.photosSrcUrl) {
+      const loadStep = Math.round(LIVEPHOTO_DEFAULT.CONCURRENT_LOADING_PHOTOS / 2);
+      this.loadPhoto(startIndex, this.renderPhoto.bind(this, startIndex));
+      this.loadPhotos(startIndex - 1, -1, -loadStep);
+      this.loadPhotos(startIndex + 1, this.numPhotos, loadStep);
+    } else if (this.photos) {
+      this.isPlayerEnabled = true;
+      this.renderPhoto(startIndex);
+      this.startPlay();
+    } else {
+      // TODO; error handling
+    }
   }
 
   stop = () => {
     this.stopPlay();
+  }
+
+  setPhotosSrcUrl = (photosSrcUrl) => {
+    this.photosSrcUrl = photosSrcUrl;
+    this.numPhotos = this.photosSrcUrl.length;
+    this.setMagicNumbers(this.numPhotos);
+  }
+
+  setPhotos = (photos) => {
+    this.photos = photos;
+    this.numPhotos = photos.length;
+    this.setMagicNumbers(this.numPhotos);
+
+    if (this.isPlayerEnabled) {
+      this.renderPhoto(this.curPhoto);
+    }
+  }
+
+  setMagicNumbers = (numPhotos) => {
+    this.playThreshold = numPhotos * LIVEPHOTO_DEFAULT.PLAY_THRESHOLD;
+    this.pixelStepMagicNumber = (100 - LIVEPHOTO_DEFAULT.SWIPE_SENSITIVITY) / 100;
+    this.rotationStepMagicNumber = (100 - LIVEPHOTO_DEFAULT.GYRO_SENSITIVITY) / 100;
+    this.rotationStepDistance =
+      (MAX_ROTATION_RANGE * this.rotationStepMagicNumber) / numPhotos;
+    this.thresholdToAutoPlay =
+      Math.round(LIVEPHOTO_DEFAULT.MANUAL_TO_AUTO_THRESHOLD / AUTO_PLAY_MAGIC_NUMBER);
+    this.thresholdToManualPlay =
+      Math.round(LIVEPHOTO_DEFAULT.AUTO_TO_MANUAL_THRESHOLD / AUTO_PLAY_MAGIC_NUMBER);
   }
 
   loadPhoto(index, callback) {
@@ -384,8 +419,13 @@ export default class LivephotoPlayer {
       this.curPhoto = index;
       const container = this.container;
       const ctx = container.getContext('2d');
-      const img = this.photos[index];
-      ctx.drawImage(img, 0, 0, container.width, container.height);
+      const photo = this.photos[index];
+
+      if (photo instanceof Image) {
+        ctx.drawImage(photo, 0, 0, container.width, container.height);
+      } else if (photo instanceof ImageData) {
+        ctx.putImageData(photo, 0, 0, 0, 0, container.width, container.height);
+      }
     }
   }
 

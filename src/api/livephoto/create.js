@@ -7,6 +7,7 @@ import execute from 'lib/utils/execute';
 import optimizeMobile from '../common/optimizeMobile';
 import getMedia from '../common/getMedia';
 import isArrayOfString from './isArrayOfString';
+import isArrayOfImageData from './isArrayOfImageData';
 import createCanvas from './createCanvas';
 import constructPhotoUrls from './constructPhotoUrls';
 import LivephotoPlayer from './LivephotoPlayer';
@@ -52,6 +53,7 @@ function createInstance(root, container, photosSrcUrl, action, callback) {
     root,
     start: player.start,
     stop: player.stop,
+    setPhotos: player.setPhotos,
   });
 }
 
@@ -64,6 +66,7 @@ export default function create(source, {
   let root;
   let mediaId;
   let photosSrcUrl;
+  let photosData;
 
   if (isDom(source)) {
     // Source is a dom element, just use it.
@@ -82,8 +85,16 @@ export default function create(source, {
     setDataAttribute(root, 'height', height);
   } else if (isArrayOfString(source) && source.length > 0) {
     // Source is an array of string, use a as photos source urls.
-    createMethod = CREATE_METHOD.PHOTOS;
+    createMethod = CREATE_METHOD.PHOTOS_URLS;
     photosSrcUrl = source;
+    root = document.createElement('DIV');
+    // TODO: value types check
+    setDataAttribute(root, 'width', width);
+    setDataAttribute(root, 'height', height);
+  } else if (isArrayOfImageData(source) && source.length > 0) {
+    // Source is an array of ImageData, use a as photosData in LivephotoPlayer.
+    createMethod = CREATE_METHOD.PHOTOS_DATA;
+    photosData = source;
     root = document.createElement('DIV');
     // TODO: value types check
     setDataAttribute(root, 'width', width);
@@ -105,7 +116,7 @@ export default function create(source, {
     }).catch((err) => {
       execute(callback, err);
     });
-  } else if (createMethod === CREATE_METHOD.PHOTOS) {
+  } else if (createMethod === CREATE_METHOD.PHOTOS_URLS) {
     // Get photo dimension from URL.
     // We assume that all photos have the same dimension.
     const img = new Image();
@@ -131,6 +142,28 @@ export default function create(source, {
       callback(execute, e);
     };
     img.src = photosSrcUrl[0];
+  } else if (createMethod === CREATE_METHOD.PHOTOS_DATA) {
+    // Get photo dimension from ImageData.
+    // We assume that all photos have the same dimension.
+    const origDimension = {
+      width: photosData[0].width,
+      height: photosData[0].height,
+    };
+    const wrapperDimension = getWrapperDimension(root, origDimension);
+    const container = createCanvas(root, origDimension, wrapperDimension);
+
+    const player = new LivephotoPlayer({
+      container,
+      photos: photosData,
+      direction: DIRECTION.VERTICAL ? DIRECTION.VERTICAL : DIRECTION.HORIZONTAL,
+    });
+    optimizeMobile(root);
+    execute(callback, null, {
+      root,
+      start: player.start,
+      stop: player.stop,
+      setPhotos: player.setPhotos,
+    });
   } else {
     execute(
       callback,
