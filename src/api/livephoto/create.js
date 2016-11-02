@@ -1,5 +1,8 @@
+/* eslint-disable no-param-reassign */
+
 import isDom from 'is-dom';
 import isString from 'lodash/isString';
+import isInteger from 'lodash/isInteger';
 
 import { CREATE_METHOD, DIRECTION } from 'constants/common';
 import { getDataAttribute, setDataAttribute } from 'lib/dom';
@@ -19,19 +22,23 @@ function getOriginalDimension(quality) {
   };
 }
 
-function getWrapperDimension(root, origDimension) {
+function calculateWrapperDimension(custDimension, origDimension) {
   let width = origDimension.width;
   let height = origDimension.height;
-  const custWidth = getDataAttribute(root, 'width');
-  const custHeight = getDataAttribute(root, 'height');
+  const custWidth = custDimension.width;
+  const custHeight = custDimension.height;
+  const isValidWidth =
+    isInteger(custDimension.width) && custDimension.width > 0;
+  const isValidHeight =
+    isInteger(custDimension.height) && custDimension.height > 0;
 
-  if (custWidth && custHeight) {
+  if (isValidWidth && isValidHeight) {
     width = custWidth;
     height = custHeight;
-  } else if (custWidth) {
+  } else if (isValidWidth) {
     width = custWidth;
     height = Math.round(origDimension.height * (custWidth / origDimension.width));
-  } else if (custHeight) {
+  } else if (isValidHeight) {
     width = Math.round(origDimension.width * (custHeight / origDimension.height));
     height = custHeight;
   }
@@ -42,7 +49,21 @@ function getWrapperDimension(root, origDimension) {
   };
 }
 
-function createInstance(root, container, photosSrcUrl, action, callback) {
+function setWrapperDimension(root, custDimension, origDimension) {
+  const newDimension = calculateWrapperDimension(custDimension, origDimension);
+  const {
+    width,
+    height,
+  } = newDimension;
+  const ratio = Math.round((height / width) * 100);
+  console.log(width, height);
+
+  // TODO: How to pass the no-param-reassign rule from eslint ?
+  root.style.width = `${width}px`;
+  root.firstChild.style.paddingBottom = `${ratio}%`;
+}
+
+function createInstance(root, container, photosSrcUrl, action, origDimension, callback) {
   const player = new LivephotoPlayer({
     container,
     photosSrcUrl,
@@ -54,6 +75,9 @@ function createInstance(root, container, photosSrcUrl, action, callback) {
     start: player.start,
     stop: player.stop,
     setPhotos: player.setPhotos,
+    setWrapperDimension: (custDimension) => {
+      setWrapperDimension(root, custDimension, origDimension);
+    },
   });
 }
 
@@ -108,11 +132,21 @@ export default function create(source, {
       // TODO: Dynamically choose quality
       const selectedQuality = content.quality[0];
       const origDimension = getOriginalDimension(selectedQuality);
-      const wrapperDimension = getWrapperDimension(root, origDimension);
+      const wrapperDimension = calculateWrapperDimension({
+        width: getDataAttribute(root, 'width'),
+        height: getDataAttribute(root, 'height'),
+      }, origDimension);
       const container = createCanvas(root, origDimension, wrapperDimension);
 
       photosSrcUrl = constructPhotoUrls(mediaId, content, selectedQuality);
-      createInstance(root, container, photosSrcUrl, media.dimension.action, callback);
+      createInstance(
+        root,
+        container,
+        photosSrcUrl,
+        media.dimension.action,
+        origDimension,
+        callback
+      );
     }).catch((err) => {
       execute(callback, err);
     });
@@ -126,7 +160,10 @@ export default function create(source, {
         width: img.width,
         height: img.height,
       };
-      const wrapperDimension = getWrapperDimension(root, origDimension);
+      const wrapperDimension = calculateWrapperDimension({
+        width: getDataAttribute(root, 'width'),
+        height: getDataAttribute(root, 'height'),
+      }, origDimension);
       const container = createCanvas(root, origDimension, wrapperDimension);
 
       createInstance(
@@ -134,6 +171,7 @@ export default function create(source, {
         container,
         photosSrcUrl,
         action === DIRECTION.VERTICAL ? DIRECTION.VERTICAL : DIRECTION.HORIZONTAL,
+        origDimension,
         callback
       );
     };
@@ -149,7 +187,10 @@ export default function create(source, {
       width: photosData[0].width,
       height: photosData[0].height,
     };
-    const wrapperDimension = getWrapperDimension(root, origDimension);
+    const wrapperDimension = calculateWrapperDimension({
+      width: getDataAttribute(root, 'width'),
+      height: getDataAttribute(root, 'height'),
+    }, origDimension);
     const container = createCanvas(root, origDimension, wrapperDimension);
 
     const player = new LivephotoPlayer({
@@ -163,6 +204,9 @@ export default function create(source, {
       start: player.start,
       stop: player.stop,
       setPhotos: player.setPhotos,
+      setWrapperDimension: (custDimension) => {
+        setWrapperDimension(root, custDimension, origDimension);
+      },
     });
   } else {
     execute(
