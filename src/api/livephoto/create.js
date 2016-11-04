@@ -56,7 +56,6 @@ function setWrapperDimension(root, custDimension, origDimension) {
     height,
   } = newDimension;
   const ratio = Math.round((height / width) * 100);
-  console.log(width, height);
 
   // TODO: How to pass the no-param-reassign rule from eslint ?
   root.style.width = `${width}px`;
