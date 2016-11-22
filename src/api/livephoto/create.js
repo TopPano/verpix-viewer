@@ -73,6 +73,7 @@ function createInstance(root, container, photosSrcUrl, action, origDimension, ca
     root,
     start: player.start,
     stop: player.stop,
+    getOriginalDimension: () => origDimension,
     setPhotos: player.setPhotos,
     setWrapperDimension: (custDimension) => {
       setWrapperDimension(root, custDimension, origDimension);
@@ -202,6 +203,7 @@ export default function create(source, {
       root,
       start: player.start,
       stop: player.stop,
+      getOriginalDimension: () => origDimension,
       setPhotos: player.setPhotos,
       setWrapperDimension: (custDimension) => {
         setWrapperDimension(root, custDimension, origDimension);
