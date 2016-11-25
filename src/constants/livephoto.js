@@ -3,8 +3,8 @@
 export const LIVEPHOTO_DEFAULT = {
   // Option default values for common usage
   SWIPE_SENSITIVITY: 80, // The sensitivity for swiping (or mouse moving), range from 1 to 99
-  GYRO_SENSITIVITY: 70, // The sensitivity for gyroscope rotating, range from 1 to 99
-  PLAY_THRESHOLD: 0.5, // The threshold (proportion of loaded photos to all photos) to start playing
+  GYRO_SENSITIVITY: 35, // The sensitivity for gyroscope rotating, range from 1 to 99
+  PLAY_THRESHOLD: 0.3, // The threshold (proportion of loaded photos to all photos) to start playing
   CONCURRENT_LOADING_PHOTOS: 20, // The limit number of concurrently loading photos
   MOVE_BUFFER_SIZE: 20, // The lenght of buffer to store last movements
   // Option default values for auto play
