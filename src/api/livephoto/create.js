@@ -19,11 +19,44 @@ import createCanvas from './createCanvas';
 import constructPhotoUrls from './constructPhotoUrls';
 import LivephotoPlayer from './LivephotoPlayer';
 
-function getOriginalDimension(quality) {
+function parseQuality(quality) {
   return {
     width: parseInt(quality.split('X')[0], 10),
     height: parseInt(quality.split('X')[1], 10),
   };
+}
+
+function selectBestQuality(qualities, custDimension, custBasedOn) {
+  let selectedIdx = 0;
+  const dimensionList = qualities.map(quality => parseQuality(quality));
+
+  if (custBasedOn !== CUT_BASED_ON.HEIGHT) {
+    // Select best quality based on width
+    const custWidth = custDimension.width;
+    if (isInteger(custWidth) && custWidth > 0) {
+      for (let idx = 0; idx < qualities.length; idx++) {
+        if (dimensionList[idx].width >= custWidth) {
+          selectedIdx = idx;
+        } else {
+          break;
+        }
+      }
+    }
+  } else {
+    // Select best quality based on height
+    const custHeight = custDimension.height;
+    if (isInteger(custHeight) && custHeight > 0) {
+      for (let idx = 0; idx < qualities.length; idx++) {
+        if (dimensionList[idx].height >= custHeight) {
+          selectedIdx = idx;
+        } else {
+          break;
+        }
+      }
+    }
+  }
+
+  return qualities[selectedIdx];
 }
 
 function calculateWrapperDimension(custDimension, origDimension) {
@@ -151,14 +184,14 @@ export default function create(source, {
     // Fetch media data from remote API
     getMedia(mediaId).then((media) => {
       const { content } = media;
-      // TODO: Dynamically choose quality
-      const selectedQuality = content.quality[0];
-      const origDimension = getOriginalDimension(selectedQuality);
-      const wrapperDimension = calculateWrapperDimension({
+      const custDimension = {
         width: getDataAttribute(root, 'width'),
         height: getDataAttribute(root, 'height'),
-      }, origDimension);
+      };
       const cutBasedOn = getDataAttribute(root, 'cut-based');
+      const selectedQuality = selectBestQuality(content.quality, custDimension, cutBasedOn);
+      const origDimension = parseQuality(selectedQuality);
+      const wrapperDimension = calculateWrapperDimension(custDimension, origDimension);
       const container = createCanvas(root, origDimension, wrapperDimension, cutBasedOn);
 
       photosSrcUrl = constructPhotoUrls(mediaId, content, selectedQuality);
