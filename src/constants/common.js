@@ -11,6 +11,12 @@ export const CREATE_METHOD = {
   OTHERS: 'OTHERS',
 };
 
+export const CUT_BASED_ON = {
+  WIDTH: 'width',
+  HEIGHT: 'height',
+};
+
 export default {
   DIRECTION,
+  CUT_BASED_ON,
 };

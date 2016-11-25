@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+
 import queryString from 'query-string';
 
 const addedPostIds = [];
@@ -34,6 +36,7 @@ function addPost(postId) {
       }
       addedPostIds.push(postId);
       label.innerHTML = `${addedPostIds.length}. ${postId}`;
+      instance.root.style.border = 'dashed 1px grey';
       document.body.appendChild(label);
       document.body.appendChild(instance.root);
       msgBox.value = `Post "${postId}" is added`;

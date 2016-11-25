@@ -1,11 +1,12 @@
 /* eslint-disable no-param-reassign */
 
-export default function createCanvas(root, canvasDimension, wrapperDimension) {
+import { CUT_BASED_ON } from 'constants/common';
+
+export default function createCanvas(root, canvasDimension, wrapperDimension, cutBasedOn) {
   const outWrapper = document.createElement('DIV');
   const inWrapper = document.createElement('DIV');
   const canvas = document.createElement('CANVAS');
   const wrapperRatio = Math.round((wrapperDimension.height / wrapperDimension.width) * 100);
-  const canvasRatio = Math.round((canvasDimension.height / canvasDimension.width) * 100);
 
   // TODO: How to pass the no-param-reassign rule from eslint ?
   root.style.width = `${wrapperDimension.width}px`;
@@ -19,12 +20,28 @@ export default function createCanvas(root, canvasDimension, wrapperDimension) {
   outWrapper.style.overflow = 'hidden';
 
   // Styles for inner wrapper
-  inWrapper.style.width = '100%';
-  inWrapper.style.paddingBottom = `${canvasRatio}%`;
-  inWrapper.style.position = 'absolute';
-  inWrapper.style.top = '50%';
-  inWrapper.style.left = '0';
-  const transformStyle = 'translateY(-50%)';
+  let transformStyle;
+  if (cutBasedOn !== CUT_BASED_ON.HEIGHT) {
+    // Cut based on width
+    const heightRatio = Math.round((canvasDimension.height / canvasDimension.width) * 100);
+
+    inWrapper.style.width = '100%';
+    inWrapper.style.paddingBottom = `${heightRatio}%`;
+    inWrapper.style.position = 'absolute';
+    inWrapper.style.top = '50%';
+    inWrapper.style.left = '0';
+    transformStyle = 'translateY(-50%)';
+  } else {
+    // Cut based on height
+    const widthRatio = Math.round(wrapperRatio * (canvasDimension.width / canvasDimension.height));
+
+    inWrapper.style.width = `${widthRatio}%`;
+    inWrapper.style.height = '100%';
+    inWrapper.style.position = 'absolute';
+    inWrapper.style.top = '0';
+    inWrapper.style.left = '50%';
+    transformStyle = 'translateX(-50%)';
+  }
   inWrapper.style.webkitTransform = transformStyle;
   inWrapper.style.MozTransform = transformStyle;
   inWrapper.style.msTransform = transformStyle;
