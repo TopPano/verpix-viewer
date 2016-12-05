@@ -10,7 +10,10 @@ import { DIRECTION } from 'constants/common';
 import { LIVEPHOTO_DEFAULT, PLAY_MODE, SWIPE_MODE, AUTO_PLAY_DIR } from 'constants/livephoto';
 import EVENTS from 'constants/events';
 import { isMobile } from 'lib/devices';
-import { isHover } from 'lib/dom';
+import {
+  isHover,
+  applyStyle,
+} from 'lib/dom';
 import { getPosition } from 'lib/events/click';
 import Gyro from './Gyro';
 
@@ -27,6 +30,7 @@ export default class LivephotoPlayer {
   constructor(params) {
     // Read only member variables
     this.container = params.container;
+    this.tip = params.tip;
     this.direction = params.direction;
     if (params.photosSrcUrl) {
       this.setPhotosSrcUrl(params.photosSrcUrl);
@@ -45,6 +49,8 @@ export default class LivephotoPlayer {
       this.numLoadedPhotos = 0;
     }
     this.isPlayerEnabled = false;
+    this.hasTipShown = false;
+    this.hideTip();
     this.pixelStepDistance = this.getNewPixelStepDistance();
     this.curPhoto = -1;
     this.playMode = PLAY_MODE.NONE;
@@ -96,6 +102,22 @@ export default class LivephotoPlayer {
 
   stop = () => {
     this.stopPlay();
+  }
+
+  showTip() {
+    if (!this.isTipShown) {
+      applyStyle(this.tip, 'transition', 'opacity 2.5s 3s linear');
+      this.tip.style.opacity = '1';
+      this.isTipShown = true;
+    }
+  }
+
+  hideTip() {
+    if (this.isTipShown) {
+      applyStyle(this.tip, 'transition', 'opacity .5s linear');
+      this.tip.style.opacity = '0';
+      this.isTipShown = false;
+    }
   }
 
   setPhotosSrcUrl = (photosSrcUrl) => {
@@ -178,6 +200,7 @@ export default class LivephotoPlayer {
 
   startPlay() {
     if (this.isPlayerEnabled) {
+      this.showTip();
       this.container.addEventListener(EVENTS.CLICK_START, this.handleTransitionStart);
       this.container.addEventListener(EVENTS.CLICK_MOVE, this.handleTransitionMove);
       this.container.addEventListener(EVENTS.CLICK_END, this.handleTransitionEnd);
@@ -194,6 +217,7 @@ export default class LivephotoPlayer {
   }
 
   stopPlay() {
+    this.hideTip();
     this.container.removeEventListener(EVENTS.CLICK_START, this.handleTransitionStart);
     this.container.removeEventListener(EVENTS.CLICK_MOVE, this.handleTransitionMove);
     this.container.removeEventListener(EVENTS.CLICK_END, this.handleTransitionEnd);
@@ -215,6 +239,7 @@ export default class LivephotoPlayer {
       this.manualToAutoTimeout = setTimeout(() => {
         if (this.countToAutoPlay > 0) {
           this.playMode = PLAY_MODE.AUTO;
+          this.showTip();
         }
         this.isWaitManualToAuto = false;
         this.manualToAutoTimeout = null;
@@ -263,6 +288,7 @@ export default class LivephotoPlayer {
     // Force switching auto to manual mode when mouse hovering
     if (isHovering && this.playMode === PLAY_MODE.AUTO) {
       this.playMode = PLAY_MODE.MANUAL;
+      this.hideTip();
       if (this.isWaitAutoToManual) {
         this.stopWaitAutoToManual();
       }
@@ -342,6 +368,9 @@ export default class LivephotoPlayer {
     }
 
     if (move !== 0) {
+      if (this.isTipShown && this.playMode === PLAY_MODE.MANUAL) {
+        this.hideTip();
+      }
       this.renderPhotoByDelta(move);
     }
 

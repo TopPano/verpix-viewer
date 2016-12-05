@@ -1,10 +1,14 @@
 /* eslint-disable no-param-reassign */
 
+import { applyStyle } from 'lib/dom';
+import { isMobile } from 'lib/devices';
 import { CUT_BASED_ON } from 'constants/common';
+import config from 'config';
 
 export default function createCanvas(root, canvasDimension, wrapperDimension, cutBasedOn) {
   const outWrapper = document.createElement('DIV');
   const inWrapper = document.createElement('DIV');
+  const tip = new Image();
   const canvas = document.createElement('CANVAS');
   const wrapperRatio = Math.round((wrapperDimension.height / wrapperDimension.width) * 100);
 
@@ -42,11 +46,20 @@ export default function createCanvas(root, canvasDimension, wrapperDimension, cu
     inWrapper.style.left = '50%';
     transformStyle = 'translateX(-50%)';
   }
-  inWrapper.style.webkitTransform = transformStyle;
-  inWrapper.style.MozTransform = transformStyle;
-  inWrapper.style.msTransform = transformStyle;
-  inWrapper.style.OTransform = transformStyle;
-  inWrapper.style.transform = transformStyle;
+  applyStyle(inWrapper, 'transform', transformStyle);
+
+  // Attributes for tip
+  // TODO: Tip for desktop
+  if (isMobile()) {
+    tip.src = `${config.staticRoot}/tip-tilt.svg`;
+    tip.style.width = '80px';
+    tip.style.height = '60px';
+    tip.style.opacity = '0';
+    tip.style.position = 'absolute';
+    tip.style.left = '50%';
+    tip.style.bottom = '15px';
+    applyStyle(tip, 'transform', 'translateX(-50%)');
+  }
 
   // Attributes for canvas
   canvas.width = canvasDimension.width;
@@ -62,6 +75,10 @@ export default function createCanvas(root, canvasDimension, wrapperDimension, cu
   root.appendChild(outWrapper);
   outWrapper.appendChild(inWrapper);
   inWrapper.appendChild(canvas);
+  inWrapper.appendChild(tip);
 
-  return canvas;
+  return {
+    container: canvas,
+    tip,
+  };
 }

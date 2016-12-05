@@ -108,6 +108,7 @@ function setWrapperDimension(root, custDimension, origDimension, cutBasedOn) {
 function createInstance(
   root,
   container,
+  tip,
   photosSrcUrl,
   action,
   origDimension,
@@ -116,6 +117,7 @@ function createInstance(
 ) {
   const player = new LivephotoPlayer({
     container,
+    tip,
     photosSrcUrl,
     direction: action,
   });
@@ -192,12 +194,16 @@ export default function create(source, {
       const selectedQuality = selectBestQuality(content.quality, custDimension, cutBasedOn);
       const origDimension = parseQuality(selectedQuality);
       const wrapperDimension = calculateWrapperDimension(custDimension, origDimension);
-      const container = createCanvas(root, origDimension, wrapperDimension, cutBasedOn);
+      const {
+        container,
+        tip,
+      } = createCanvas(root, origDimension, wrapperDimension, cutBasedOn);
 
       photosSrcUrl = constructPhotoUrls(mediaId, content, selectedQuality);
       createInstance(
         root,
         container,
+        tip,
         photosSrcUrl,
         media.dimension.action,
         origDimension,
@@ -222,11 +228,15 @@ export default function create(source, {
         height: getDataAttribute(root, 'height'),
       }, origDimension);
       const cutBasedOn = getDataAttribute(root, 'cut-based');
-      const container = createCanvas(root, origDimension, wrapperDimension, cutBasedOn);
+      const {
+        container,
+        tip,
+      } = createCanvas(root, origDimension, wrapperDimension, cutBasedOn);
 
       createInstance(
         root,
         container,
+        tip,
         photosSrcUrl,
         action === DIRECTION.VERTICAL ? DIRECTION.VERTICAL : DIRECTION.HORIZONTAL,
         origDimension,
@@ -251,10 +261,14 @@ export default function create(source, {
       height: getDataAttribute(root, 'height'),
     }, origDimension);
     const cutBasedOn = getDataAttribute(root, 'cut-based');
-    const container = createCanvas(root, origDimension, wrapperDimension, cutBasedOn);
+    const {
+      container,
+      tip,
+    } = createCanvas(root, origDimension, wrapperDimension, cutBasedOn);
 
     const player = new LivephotoPlayer({
       container,
+      tip,
       photos: photosData,
       direction: DIRECTION.VERTICAL ? DIRECTION.VERTICAL : DIRECTION.HORIZONTAL,
     });
