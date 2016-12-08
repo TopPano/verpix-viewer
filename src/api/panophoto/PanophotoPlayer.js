@@ -1,9 +1,9 @@
 /* eslint-disable no-param-reassign */
 
 import THREE from 'three';
-import sortBy from 'lodash/sortBy';
 import clamp from 'lodash/clamp';
 import fill from 'lodash/fill';
+import isNumber from 'lodash/isNumber';
 import raf from 'raf';
 
 import { PARAMS_DEFAULT } from 'constants/panophoto';
@@ -31,10 +31,13 @@ const ROTATION = {
 
 export default class PanophotoPlayer {
   constructor(params) {
-    isIOS();
     // Read only member variables
     this.container = params.container;
     this.photosSrcUrl = params.photosSrcUrl;
+    this.width = params.width;
+    this.height = params.height;
+    this.initialLng = isNumber(params.initialLng) ? ((params.initialLng + 360) % 360) : 0;
+    this.initialLat = isNumber(params.initialLat) ? clamp(params.initialLat, LAT_MIN, LAT_MAX) : 0;
     this.swipeDeltaMagicNumber = PARAMS_DEFAULT.SWIPE_SENSITIVITY * SWIPE.DELTA_FACTOR;
     this.rotationDeltaMagicNumber = PARAMS_DEFAULT.ROTATION_SENSITIVITY * ROTATION.DELTA_FACTOR;
   }
@@ -50,6 +53,30 @@ export default class PanophotoPlayer {
     this.stopPlay();
   }
 
+  // Entry function for getting current coordinates (longitude and latitude)
+  getCurrentCoordinates = () => ({
+    lng: this.camera.lng,
+    lat: this.camera.lat,
+  })
+
+  // Entry function for getting snapshot of current view
+  getCurrentSnapshot = (quality) => (
+    this.renderer.domElement.toDataURL('image/jpeg', isNumber(quality) ? quality : 1)
+  )
+
+  // Entry function for setting photos src urls
+  setPhotos = (photosSrcUrl) => {
+    this.photosSrcUrl = photosSrcUrl;
+    this.buildScene(photosSrcUrl);
+  }
+
+  // Entry function for setting dimension
+  setDimension = (width, height) => {
+    this.width = width;
+    this.height = height;
+    this.updateDimension();
+  }
+
   // Initialize or reset writable member variables
   resetMemberVars() {
     // Scene for rendering
@@ -59,8 +86,8 @@ export default class PanophotoPlayer {
     // Camera and its related variables
     this.camera = {
       instance: null,
-      lat: 0,
-      lng: 0,
+      lng: this.initialLng,
+      lat: this.initialLat,
     };
     // Position and delta of swipe
     this.swipe = {
@@ -80,9 +107,9 @@ export default class PanophotoPlayer {
       },
     };
     // The timer for re-rendering
-    this.animationTimer = null;
+    this.clearAnimationTimer();
     // The timer for updating pixel delta
-    this.updateTimer = null;
+    this.clearUpdateTimer();
     // Dimension includes width and height of container, window orientation (portrait or landscape)
     this.updateDimension();
   }
@@ -98,6 +125,8 @@ export default class PanophotoPlayer {
 
   // Stop playing
   stopPlay() {
+    this.removeEventHandlers();
+    this.resetMemberVars();
   }
 
   // Setup variables about Three
@@ -119,7 +148,24 @@ export default class PanophotoPlayer {
     }
   }
 
+  // Remove handlers for DOM events
+  removeEventHandlers() {
+    this.removeCommonHandlers();
+    this.removeSwipeHandlers();
+    if (!isMobile()) {
+      this.removeWheelHandlers();
+    } else {
+      // TODO: also remove handlers for adjusting fov
+      this.removeRotationHandlers();
+    }
+  }
+
   // Add handlers for common events, such as device orientation
+  removeCommonHandlers() {
+    window.removeEventListener('deviceorientation', this.handleDeviceOrientation);
+  }
+
+  // Remove handlers for common events, such as device orientation
   addCommonHandlers() {
     window.addEventListener('deviceorientation', this.handleDeviceOrientation);
   }
@@ -133,10 +179,26 @@ export default class PanophotoPlayer {
     this.updateTimer = raf(this.onUpdate);
   }
 
+  // Remove handlers for swipe (click or touch)
+  removeSwipeHandlers() {
+    this.container.removeEventListener(EVENTS.CLICK_START, this.handleSwipeStart);
+    this.container.removeEventListener(EVENTS.CLICK_MOVE, this.handleSwipeMove);
+    this.container.removeEventListener(EVENTS.CLICK_END, this.handleSwipeEnd);
+    this.container.removeEventListener(EVENTS.CLICK_CANCEL, this.handleSwipeEnd);
+    this.clearUpdateTimer();
+  }
+
   // Add handlers for mouse wheel
   addWheelHandlers() {
     EVENTS.WHEEL.forEach((wheelEvent) => {
       this.container.addEventListener(wheelEvent, this.handleWheel);
+    });
+  }
+
+  // Remove handlers for mouse wheel
+  removeWheelHandlers() {
+    EVENTS.WHEEL.forEach((wheelEvent) => {
+      this.container.removeEventListener(wheelEvent, this.handleWheel);
     });
   }
 
@@ -168,6 +230,13 @@ export default class PanophotoPlayer {
     }).catch(() => {
       // TODO: error handling
     });
+  }
+
+  // remove handlers for gyroscope rotation
+  removeRotationHandlers() {
+    if (this.rotation && this.rotation.gyro) {
+      this.rotation.gyro.stop();
+    }
   }
 
   // Setup (perspective) camera
@@ -208,18 +277,14 @@ export default class PanophotoPlayer {
   // Generate textrues from images.
   buildScene(imgs, callback) {
     const loader = new THREE.TextureLoader();
-    const sortedImgs = sortBy(imgs, (img) => {
-      const subIndex = img.srcUrl.indexOf('equirectangular');
-      return img.srcUrl.slice(subIndex);
-    });
     let count = 0;
 
     loader.crossOrigin = '';
-    sortedImgs.forEach((img, index) => {
-      loader.load(img.srcUrl, (texture) => {
+    imgs.forEach((img, index) => {
+      loader.load(img, (texture) => {
         // TODO: How to pass the no-param-reassign rule from eslint ?
         texture.minFilter = THREE.LinearFilter;
-        this.addMesh(texture, index);
+        this.addMesh(texture, index, imgs.length);
         count++;
         if (count === imgs.length) {
           execute(callback);
@@ -233,18 +298,19 @@ export default class PanophotoPlayer {
   }
 
   // "Stick" mesh onto scene
-  addMesh(texture, index) {
-    const j = parseInt(index / 4, 10);
-    // TODO: Do we need heading offset ?
-    const headingOffset = 0;
+  addMesh(texture, index, totalCount) {
+    const divisor = Math.ceil(totalCount / 2);
+    const j = parseInt(index / divisor, 10);
+    const horizontalLength = (Math.PI * 2) / divisor;
+    const verticalLength = totalCount <= 1 ? Math.PI : (Math.PI / 2);
     const geometry = new THREE.SphereGeometry(
-      SPHERE_RADIUS,
-      20,
-      20,
-      ((Math.PI / 2) * index) - ((headingOffset * Math.PI) / 180),
-      Math.PI / 2,
-      (Math.PI / 2) * j,
-      Math.PI / 2
+      SPHERE_RADIUS, // sphere radius
+      50, // # of horizontal segments
+      50, // # of vertical segments
+      (horizontalLength * index), // horizontal starting angle
+      horizontalLength, // horizontal sweep angle size
+      verticalLength * j, // vertical starting angle
+      verticalLength // vertical sweep angle size
     );
     geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
     const material = new THREE.MeshBasicMaterial({
@@ -410,12 +476,22 @@ export default class PanophotoPlayer {
   // Update container width, height, and window orientation
   updateDimension() {
     const isPortrait = this.isPortrait();
-    const containerDimension = this.getContainerDimension();
+
     this.dimension = {
       isPortrait,
-      width: containerDimension.width,
-      height: containerDimension.height,
+      width: this.width,
+      height: this.height,
     };
+
+    if (this.camera && this.camera.instance) {
+      // Update camera aspect ratio
+      this.camera.instance.aspect = this.dimension.width / this.dimension.height;
+      this.camera.instance.updateProjectionMatrix();
+    }
+    if (this.renderer) {
+      // Update renderer size
+      this.renderer.setSize(this.dimension.width, this.dimension.height);
+    }
   }
 
   // Return the window orientation is portrait or not
@@ -433,15 +509,16 @@ export default class PanophotoPlayer {
     return isPortrait;
   }
 
-  // Get the dimension (width and height) of container
-  getContainerDimension() {
-    const width = parseInt(this.container.style.width, 10);
-    const height = parseInt(this.container.style.height, 10);
+  // Clear timer of animation timer (for re-rendering)
+  clearAnimationTimer() {
+    raf.cancel(this.animationTimer);
+    this.animationTimer = null;
+  }
 
-    return {
-      width,
-      height,
-    };
+  // Clear timer of update timer (for updating pixel delta)
+  clearUpdateTimer() {
+    raf.cancel(this.updateTimer);
+    this.updateTimer = null;
   }
 
   // Check whether left button is clicked (for mouse) or finger is pressed (for touch)

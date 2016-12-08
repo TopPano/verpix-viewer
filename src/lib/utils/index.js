@@ -1,5 +1,9 @@
+import isArrayOfString from './isArrayOfString';
+import isArrayOfImageData from './isArrayOfImageData';
 import execute from './execute';
 
-export default {
+export {
+  isArrayOfString,
+  isArrayOfImageData,
   execute,
 };

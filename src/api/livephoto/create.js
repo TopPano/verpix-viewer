@@ -9,12 +9,17 @@ import {
   DIRECTION,
   CUT_BASED_ON,
 } from 'constants/common';
-import { getDataAttribute, setDataAttribute } from 'lib/dom';
-import execute from 'lib/utils/execute';
+import {
+  getDataAttribute,
+  setDataAttribute,
+} from 'lib/dom';
+import {
+  isArrayOfString,
+  isArrayOfImageData,
+  execute,
+} from 'lib/utils';
 import optimizeMobile from '../common/optimizeMobile';
 import getMedia from '../common/getMedia';
-import isArrayOfString from './isArrayOfString';
-import isArrayOfImageData from './isArrayOfImageData';
 import createCanvas from './createCanvas';
 import constructPhotoUrls from './constructPhotoUrls';
 import LivephotoPlayer from './LivephotoPlayer';
@@ -154,7 +159,6 @@ export default function create(source, {
   } else if (isString(source)) {
     // Source is a string, use it as media ID.
     createMethod = CREATE_METHOD.ID;
-    root = source;
     root = document.createElement('DIV');
     mediaId = source;
     // TODO: value types check
@@ -286,7 +290,7 @@ export default function create(source, {
   } else {
     execute(
       callback,
-      new Error('Required argument `source` must be DOM element, string or array of string'
-    ));
+      new Error('Required argument `source` must be DOM element, string or array of string')
+    );
   }
 }

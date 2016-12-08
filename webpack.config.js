@@ -24,7 +24,7 @@ const config = {
   entry: {
     'sdk': './src/main.js',
     'sdk-livephoto': ['./src/livephoto.js'],
-    'sdk-panorama': ['./src/panorama.js'],
+    'sdk-panophoto': ['./src/panophoto.js'],
     demo: './demo/main.js'
   },
 

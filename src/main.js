@@ -1,2 +1,2 @@
 require('./livephoto');
-require('./panorama');
+require('./panophoto');
