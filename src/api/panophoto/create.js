@@ -2,6 +2,7 @@
 
 import isDom from 'is-dom';
 import isString from 'lodash/isString';
+import isNumber from 'lodash/isNumber';
 
 import {
   getDataAttribute,
@@ -109,13 +110,17 @@ export default function create(source, params, callback) {
 
   if (createMethod === CREATE_METHOD.DOM || createMethod === CREATE_METHOD.ID) {
     getMedia(mediaId).then((res) => {
+      const {
+        lng,
+        lat,
+      } = res.dimension;
       createInstance({
         root,
         photosSrcUrl: constructPhotoUrls(mediaId, res),
         width,
         height,
-        initialLat,
-        initialLng,
+        initialLat: isNumber(initialLat) ? initialLat : lat,
+        initialLng: isNumber(initialLng) ? initialLng : lng,
         callback,
       });
     }).catch((err) => {
