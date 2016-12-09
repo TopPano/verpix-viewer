@@ -2,7 +2,6 @@
 
 import isDom from 'is-dom';
 import isString from 'lodash/isString';
-import sortBy from 'lodash/sortBy';
 
 import {
   getDataAttribute,
@@ -14,6 +13,7 @@ import {
   execute,
 } from 'lib/utils';
 import createContainer from './createContainer';
+import constructPhotoUrls from './constructPhotUrls';
 import PanophotoPlayer from './PanophotoPlayer';
 import optimizeMobile from '../common/optimizeMobile';
 import getMedia from '../common/getMedia';
@@ -108,15 +108,10 @@ export default function create(source, params, callback) {
   }
 
   if (createMethod === CREATE_METHOD.DOM || createMethod === CREATE_METHOD.ID) {
-    getMedia(mediaId).then((media) => {
-      photosSrcUrl = sortBy(media.media.srcTiledImages, (img) => {
-        const subIndex = img.srcUrl.indexOf('equirectangular');
-        return img.srcUrl.slice(subIndex);
-      });
+    getMedia(mediaId).then((res) => {
       createInstance({
         root,
-        // TODO: fit new api format to construct photosSrcUrl
-        photosSrcUrl: media.media.srcTiledImages,
+        photosSrcUrl: constructPhotoUrls(mediaId, res),
         width,
         height,
         initialLat,
