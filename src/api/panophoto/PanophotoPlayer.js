@@ -298,11 +298,14 @@ export default class PanophotoPlayer {
   }
 
   // "Stick" mesh onto scene
-  addMesh(texture, index, totalCount) {
-    const divisor = Math.ceil(totalCount / 2);
+  addMesh(texture, index, totalTiles) {
+    const divisor =
+      totalTiles > 1 ?
+      Math.pow(2, Math.ceil((Math.ceil(Math.log2(totalTiles)) + 1) / 2)) :
+      1;
     const j = parseInt(index / divisor, 10);
     const horizontalLength = (Math.PI * 2) / divisor;
-    const verticalLength = totalCount <= 1 ? Math.PI : (Math.PI / 2);
+    const verticalLength = (totalTiles > 1) ? ((Math.PI * 2) / divisor) : Math.PI;
     const geometry = new THREE.SphereGeometry(
       SPHERE_RADIUS, // sphere radius
       50, // # of horizontal segments
