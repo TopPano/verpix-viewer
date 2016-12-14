@@ -60,9 +60,36 @@ export default class PanophotoPlayer {
   })
 
   // Entry function for getting snapshot of current view
-  getCurrentSnapshot = (quality) => (
-    this.renderer.domElement.toDataURL('image/jpeg', isNumber(quality) ? quality : 1)
-  )
+  // TODO: add option for cropping based on height
+  getCurrentSnapshot = ({ quality = 1, ratio }) => {
+    // No specified aspect ratio or ratio is not valid, just return the whole view
+    if (!isNumber(ratio) || ratio <= 0 || ratio < (this.dimension.width / this.dimension.height)) {
+      return this.renderer.domElement.toDataURL('image/jpeg', quality);
+    }
+
+    const canvas = document.createElement('CANVAS');
+    const ctx = canvas.getContext('2d');
+    const cropWidth = this.dimension.width;
+    const cropHeight = parseInt(this.dimension.width / ratio, 10);
+    const cropX = 0;
+    const cropY = parseInt((this.dimension.height - cropHeight) / 2, 10);
+
+    canvas.width = cropWidth;
+    canvas.height = cropHeight;
+    ctx.drawImage(
+      this.renderer.domElement,
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      cropWidth,
+      cropHeight
+    );
+
+    return canvas.toDataURL('image/jpeg', quality);
+  }
 
   // Entry function for setting photos src urls
   setPhotos = (photosSrcUrl) => {
