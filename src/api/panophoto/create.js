@@ -72,6 +72,7 @@ export default function create(source, params, callback) {
   let photosSrcUrl;
   let initialLat;
   let initialLng;
+  let disableGA;
 
   if (isDom(source)) {
     // Source is a dom element, just use it.
@@ -83,6 +84,7 @@ export default function create(source, params, callback) {
     height = getDataAttribute(root, 'height');
     initialLat = getDataAttribute(root, 'initial-lat');
     initialLng = getDataAttribute(root, 'initial-lng');
+    disableGA = getDataAttribute(root, 'disable-ga');
   } else if (isString(source)) {
     // Source is a string, use it as media ID.
     createMethod = CREATE_METHOD.ID;
@@ -93,6 +95,7 @@ export default function create(source, params, callback) {
     height = params.height;
     initialLat = params.initialLat;
     initialLng = params.initialLng;
+    disableGA = params.disableGA;
     setDataAttribute(root, 'id', params.id);
     setDataAttribute(root, 'width', params.width);
     setDataAttribute(root, 'height', params.height);
@@ -119,9 +122,11 @@ export default function create(source, params, callback) {
         lat,
       } = res.dimension;
 
-      sendGAEvent(config.ga.trackingId, type, mediaId, () => {
-        sendGAEvent(gaId, type, mediaId);
-      });
+      if (!disableGA) {
+        sendGAEvent(config.ga.trackingId, type, mediaId, () => {
+          sendGAEvent(gaId, type, mediaId);
+        });
+      }
 
       createInstance({
         root,

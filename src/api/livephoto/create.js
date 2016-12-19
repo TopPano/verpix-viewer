@@ -146,6 +146,7 @@ export default function create(source, {
   height,
   action,
   cutBased,
+  disableGA,
 }, callback) {
   let createMethod = CREATE_METHOD.OTHERS;
   let root;
@@ -168,6 +169,7 @@ export default function create(source, {
     setDataAttribute(root, 'width', width);
     setDataAttribute(root, 'height', height);
     setDataAttribute(root, 'cut-based', cutBased);
+    setDataAttribute(root, 'disable-ga', disableGA);
   } else if (isArrayOfString(source) && source.length > 0) {
     // Source is an array of string, use a as photos source urls.
     createMethod = CREATE_METHOD.PHOTOS_URLS;
@@ -201,6 +203,7 @@ export default function create(source, {
         height: getDataAttribute(root, 'height'),
       };
       const cutBasedOn = getDataAttribute(root, 'cut-based');
+      const isGADisabled = getDataAttribute(root, 'disable-ga');
       const selectedQuality = selectBestQuality(content.quality, custDimension, cutBasedOn);
       const origDimension = parseQuality(selectedQuality);
       const wrapperDimension = calculateWrapperDimension(custDimension, origDimension);
@@ -209,9 +212,11 @@ export default function create(source, {
         tip,
       } = createCanvas(root, origDimension, wrapperDimension, cutBasedOn);
 
-      sendGAEvent(config.ga.trackingId, type, mediaId, () => {
-        sendGAEvent(gaId, type, mediaId);
-      });
+      if (!isGADisabled) {
+        sendGAEvent(config.ga.trackingId, type, mediaId, () => {
+          sendGAEvent(gaId, type, mediaId);
+        });
+      }
 
       photosSrcUrl = constructPhotoUrls(mediaId, content, selectedQuality);
       createInstance(
