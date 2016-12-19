@@ -4,6 +4,7 @@ import isDom from 'is-dom';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
 
+import config from 'config';
 import {
   getDataAttribute,
   setDataAttribute,
@@ -11,6 +12,7 @@ import {
 import { CREATE_METHOD } from 'constants/common';
 import {
   isArrayOfString,
+  sendGAEvent,
   execute,
 } from 'lib/utils';
 import createContainer from './createContainer';
@@ -110,10 +112,17 @@ export default function create(source, params, callback) {
 
   if (createMethod === CREATE_METHOD.DOM || createMethod === CREATE_METHOD.ID) {
     getMedia(mediaId).then((res) => {
+      const { gaId } = res.owner;
+      const { type } = res;
       const {
         lng,
         lat,
       } = res.dimension;
+
+      sendGAEvent(config.ga.trackingId, type, mediaId, () => {
+        sendGAEvent(gaId, type, mediaId);
+      });
+
       createInstance({
         root,
         photosSrcUrl: constructPhotoUrls(mediaId, res),

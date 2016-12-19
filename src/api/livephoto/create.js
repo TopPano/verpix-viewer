@@ -4,6 +4,7 @@ import isDom from 'is-dom';
 import isString from 'lodash/isString';
 import isInteger from 'lodash/isInteger';
 
+import config from 'config';
 import {
   CREATE_METHOD,
   DIRECTION,
@@ -16,6 +17,7 @@ import {
 import {
   isArrayOfString,
   isArrayOfImageData,
+  sendGAEvent,
   execute,
 } from 'lib/utils';
 import optimizeMobile from '../common/optimizeMobile';
@@ -189,7 +191,11 @@ export default function create(source, {
   if (createMethod === CREATE_METHOD.DOM || createMethod === CREATE_METHOD.ID) {
     // Fetch media data from remote API
     getMedia(mediaId).then((media) => {
-      const { content } = media;
+      const { gaId } = media.owner;
+      const {
+        content,
+        type,
+      } = media;
       const custDimension = {
         width: getDataAttribute(root, 'width'),
         height: getDataAttribute(root, 'height'),
@@ -202,6 +208,10 @@ export default function create(source, {
         container,
         tip,
       } = createCanvas(root, origDimension, wrapperDimension, cutBasedOn);
+
+      sendGAEvent(config.ga.trackingId, type, mediaId, () => {
+        sendGAEvent(gaId, type, mediaId);
+      });
 
       photosSrcUrl = constructPhotoUrls(mediaId, content, selectedQuality);
       createInstance(
