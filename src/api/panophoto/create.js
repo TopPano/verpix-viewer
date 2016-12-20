@@ -72,6 +72,7 @@ export default function create(source, params, callback) {
   let photosSrcUrl;
   let initialLat;
   let initialLng;
+  let disableCDN;
   let disableGA;
 
   if (isDom(source)) {
@@ -84,6 +85,7 @@ export default function create(source, params, callback) {
     height = getDataAttribute(root, 'height');
     initialLat = getDataAttribute(root, 'initial-lat');
     initialLng = getDataAttribute(root, 'initial-lng');
+    disableCDN = getDataAttribute(root, 'disable-cdn');
     disableGA = getDataAttribute(root, 'disable-ga');
   } else if (isString(source)) {
     // Source is a string, use it as media ID.
@@ -95,6 +97,7 @@ export default function create(source, params, callback) {
     height = params.height;
     initialLat = params.initialLat;
     initialLng = params.initialLng;
+    disableCDN = params.disableCDN;
     disableGA = params.disableGA;
     setDataAttribute(root, 'id', params.id);
     setDataAttribute(root, 'width', params.width);
@@ -130,7 +133,7 @@ export default function create(source, params, callback) {
 
       createInstance({
         root,
-        photosSrcUrl: constructPhotoUrls(mediaId, res),
+        photosSrcUrl: constructPhotoUrls(mediaId, res, disableCDN),
         width,
         height,
         initialLat: isNumber(initialLat) ? initialLat : lat,

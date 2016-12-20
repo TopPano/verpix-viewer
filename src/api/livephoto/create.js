@@ -146,6 +146,7 @@ export default function create(source, {
   height,
   action,
   cutBased,
+  disableCDN,
   disableGA,
 }, callback) {
   let createMethod = CREATE_METHOD.OTHERS;
@@ -169,6 +170,7 @@ export default function create(source, {
     setDataAttribute(root, 'width', width);
     setDataAttribute(root, 'height', height);
     setDataAttribute(root, 'cut-based', cutBased);
+    setDataAttribute(root, 'disable-cdn', disableCDN);
     setDataAttribute(root, 'disable-ga', disableGA);
   } else if (isArrayOfString(source) && source.length > 0) {
     // Source is an array of string, use a as photos source urls.
@@ -203,6 +205,7 @@ export default function create(source, {
         height: getDataAttribute(root, 'height'),
       };
       const cutBasedOn = getDataAttribute(root, 'cut-based');
+      const isCDNDisabled = getDataAttribute(root, 'disable-cdn');
       const isGADisabled = getDataAttribute(root, 'disable-ga');
       const selectedQuality = selectBestQuality(content.quality, custDimension, cutBasedOn);
       const origDimension = parseQuality(selectedQuality);
@@ -218,7 +221,7 @@ export default function create(source, {
         });
       }
 
-      photosSrcUrl = constructPhotoUrls(mediaId, content, selectedQuality);
+      photosSrcUrl = constructPhotoUrls(mediaId, content, selectedQuality, isCDNDisabled);
       createInstance(
         root,
         container,
