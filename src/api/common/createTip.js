@@ -6,17 +6,20 @@ export default function createTip() {
   const tip = new Image();
 
   // Attributes for tip
-  // TODO: Tip for desktop
   if (isMobile()) {
     tip.src = `${config.staticRoot}/assets/tip-tilt.svg`;
-    tip.style.width = '60px';
-    tip.style.height = '45px';
-    tip.style.opacity = '0';
-    tip.style.position = 'absolute';
-    tip.style.left = '50%';
-    tip.style.bottom = '12px';
-    applyStyle(tip, 'transform', 'translateX(-50%)');
+    tip.width = 60;
+    tip.height = 45;
+  } else {
+    tip.src = `${config.staticRoot}/assets/tip-mouse.svg`;
+    tip.width = 45;
+    tip.height = 45;
   }
+  tip.style.opacity = '0';
+  tip.style.position = 'absolute';
+  tip.style.left = '50%';
+  tip.style.bottom = '12px';
+  applyStyle(tip, 'transform', 'translateX(-50%)');
   // states and methods for tip
   tip.isShown = false;
   tip.show = () => {
