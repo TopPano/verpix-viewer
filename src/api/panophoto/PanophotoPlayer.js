@@ -44,6 +44,7 @@ export default class PanophotoPlayer {
     this.photosSrcUrl = params.photosSrcUrl;
     this.width = params.width;
     this.height = params.height;
+    this.brand = params.brand;
     this.tip = params.tip;
     this.initialLng = isNumber(params.initialLng) ? ((params.initialLng + 360) % 360) : 0;
     this.initialLat = isNumber(params.initialLat) ? clamp(params.initialLat, LAT_MIN, LAT_MAX) : 0;
@@ -157,6 +158,8 @@ export default class PanophotoPlayer {
     this.clearUpdateTimer();
     // Dimension includes width and height of container, window orientation (portrait or landscape)
     this.updateDimension();
+    // Hide the brand
+    this.brand.hide();
     // Hide the tip
     this.tip.hide();
   }
@@ -171,6 +174,11 @@ export default class PanophotoPlayer {
         this.autoPlay.startWaitTime = now();
       }
       this.animationTimer = raf(this.onAnimationFrame);
+      this.brand.show();
+      setTimeout(() => {
+        this.brand.hide();
+        setTimeout(() => this.brand.remove(), 500);
+      }, 4000);
     });
   }
 

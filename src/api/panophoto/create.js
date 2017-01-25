@@ -40,6 +40,7 @@ function createInstance({
 }) {
   const {
     container,
+    brand,
     tip,
   } = createContainer(root, width, height, () => container.remove());
 
@@ -50,6 +51,7 @@ function createInstance({
     height,
     initialLat,
     initialLng,
+    brand,
     tip,
   });
   optimizeMobile(root);
