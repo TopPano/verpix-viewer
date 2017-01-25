@@ -3,10 +3,12 @@
 import THREE from 'three';
 import clamp from 'lodash/clamp';
 import fill from 'lodash/fill';
+import now from 'lodash/now';
 import isNumber from 'lodash/isNumber';
 import raf from 'raf';
 
 import { PARAMS_DEFAULT } from 'constants/panophoto';
+import { PLAY_MODE } from 'constants/common';
 import { isMobile, isIOS } from 'lib/devices';
 import { getPosition } from 'lib/events/click';
 import execute from 'lib/utils/execute';
@@ -27,6 +29,12 @@ const SWIPE = {
 const ROTATION = {
   // TODO: test for more devices, to use different factor
   DELTA_FACTOR: isIOS() ? 0.00025 : 0.0125,
+};
+
+const AUTO_PLAY = {
+  MANUAL_TO_AUTO_MOVEMENT_THRESHOLD: isMobile() ? 3 : 1,
+  AUTO_TO_MANUAL_MOVEMENT_THRESHOLD: isMobile() ? 1 : 0.2,
+  LNG_DELTA: 0.04,
 };
 
 export default class PanophotoPlayer {
@@ -133,6 +141,15 @@ export default class PanophotoPlayer {
         y: 0,
       },
     };
+    // State about playing
+    this.play = {
+      mode: PLAY_MODE.NONE,
+    };
+    // State about autoplaying
+    this.autoPlay = {
+      startWaitTime: 0,
+      accumulativeMovement: 0,
+    };
     // The timer for re-rendering
     this.clearAnimationTimer();
     // The timer for updating pixel delta
@@ -146,6 +163,10 @@ export default class PanophotoPlayer {
     this.setup();
     this.buildScene(this.photosSrcUrl, () => {
       this.addEventHandlers();
+      this.play.mode = PLAY_MODE.MANUAL;
+      if (PARAMS_DEFAULT.AUTO_PLAY_ENABLED) {
+        this.autoPlay.startWaitTime = now();
+      }
       this.animationTimer = raf(this.onAnimationFrame);
     });
   }
@@ -356,17 +377,71 @@ export default class PanophotoPlayer {
 
   // Update camera related variables and re-render
   onAnimationFrame = () => {
-    // Update longitude and latitude
+    /* Update longitude and latitude */
     const swipeDelta = this.getSmoothSwipeDelta();
     const rotationDelta = this.getRotationDelta();
-    const newLng =
-      this.camera.lng
-      - (swipeDelta.x * this.swipeDeltaMagicNumber)
-      - (rotationDelta.x * this.rotationDeltaMagicNumber);
-    const newLat =
-      this.camera.lat
-      + (rotationDelta.y * this.rotationDeltaMagicNumber)
-      + (swipeDelta.y * this.swipeDeltaMagicNumber);
+    const appliedSwipeDelta = {
+      x: swipeDelta.x * this.swipeDeltaMagicNumber,
+      y: swipeDelta.y * this.swipeDeltaMagicNumber,
+    };
+    const appliedRotationDelta = {
+      x: rotationDelta.x * this.rotationDeltaMagicNumber,
+      y: rotationDelta.y * this.rotationDeltaMagicNumber,
+    };
+    let newLng = this.camera.lng;
+    let newLat = this.camera.lat;
+
+    // Update the accumualtive movement for changing play mode
+    // (From manual to auto or from auto to manual)
+    if (PARAMS_DEFAULT.AUTO_PLAY_ENABLED) {
+      this.autoPlay.accumulativeMovement +=
+        Math.abs(appliedSwipeDelta.x) +
+        Math.abs(appliedRotationDelta.x) +
+        Math.abs(appliedSwipeDelta.y) +
+        Math.abs(appliedRotationDelta.y);
+    }
+    // Update camera longitude and latitude,
+    // and change to another play mode in some conditions.
+    if (this.play.mode === PLAY_MODE.MANUAL) {
+      newLng = newLng - appliedSwipeDelta.x - appliedRotationDelta.x;
+      newLat = newLat + appliedSwipeDelta.y + appliedRotationDelta.y;
+
+      if (PARAMS_DEFAULT.AUTO_PLAY_ENABLED) {
+        if (this.autoPlay.accumulativeMovement > AUTO_PLAY.MANUAL_TO_AUTO_MOVEMENT_THRESHOLD) {
+          // Accumulative momement exceeds the limit,
+          // restart calculating it
+          this.autoPlay.startWaitTime = now();
+          this.autoPlay.accumulativeMovement = 0;
+        } else {
+          if ((now() - this.autoPlay.startWaitTime) >= PARAMS_DEFAULT.MANUAL_TO_AUTO_TIME) {
+            // Accumulative momement does not exceed the limit in waiting duration,
+            // change from manual to auto mode
+            this.play.mode = PLAY_MODE.AUTO;
+            this.autoPlay.startWaitTime = now();
+            this.autoPlay.accumulativeMovement = 0;
+          }
+        }
+      }
+    } else if (this.play.mode === PLAY_MODE.AUTO) {
+      if (PARAMS_DEFAULT.AUTO_PLAY_ENABLED) {
+        newLng += AUTO_PLAY.LNG_DELTA;
+
+        if (this.autoPlay.accumulativeMovement >= AUTO_PLAY.AUTO_TO_MANUAL_MOVEMENT_THRESHOLD) {
+          // Accumulative momement exceeds the limit,
+          // change from auto to manual mode
+          this.play.mode = PLAY_MODE.MANUAL;
+          this.autoPlay.startWaitTime = now();
+          this.autoPlay.accumulativeMovement = 0;
+        } else {
+          if ((now() - this.autoPlay.startWaitTime) >= PARAMS_DEFAULT.AUTO_TO_MANUAL_TIME) {
+            // Accumulative momement does not exceed the limit,
+            // restart calculating it
+            this.autoPlay.startWaitTime = now();
+            this.autoPlay.accumulativeMovement = 0;
+          }
+        }
+      }
+    }
     this.camera.lng = (newLng + 360) % 360;
     this.camera.lat = clamp(newLat, LAT_MIN, LAT_MAX);
 

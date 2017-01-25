@@ -6,8 +6,13 @@ import inRange from 'lodash/inRange';
 import clamp from 'lodash/clamp';
 import raf from 'raf';
 
-import { DIRECTION } from 'constants/common';
-import { LIVEPHOTO_DEFAULT, PLAY_MODE, SWIPE_MODE, AUTO_PLAY_DIR } from 'constants/livephoto';
+import {
+  DIRECTION,
+  PLAY_MODE,
+  AUTO_PLAY_DIR,
+  SWIPE_MODE,
+} from 'constants/common';
+import { LIVEPHOTO_DEFAULT } from 'constants/livephoto';
 import EVENTS from 'constants/events';
 import { isMobile } from 'lib/devices';
 import {

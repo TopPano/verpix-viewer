@@ -15,26 +15,6 @@ export const LIVEPHOTO_DEFAULT = {
   AUTO_TO_MANUAL_THRESHOLD: 100, // The period (milliseconds) to wait for changing from auto to manual mode
 };
 
-export const PLAY_MODE = {
-  NONE: 'NONE',
-  MANUAL: 'MANUAL',
-  AUTO: 'AUTO',
-};
-
-export const SWIPE_MODE = {
-  NONE: 'NONE', // Unable to swipe
-  HOLD: 'HOLD', // Left button is clicked (for mouse) or finger is pressed (for touch)
-  RELEASE: 'RELEASE', // Inverse of hold mode
-};
-
-export const AUTO_PLAY_DIR = {
-  STL: 'SMALL_TO_LARGE',
-  LTS: 'LARGE_TO_SMALL',
-  NONE: 'NONE',
-};
-
 export default {
   LIVEPHOTO_DEFAULT,
-  PLAY_MODE,
-  AUTO_PLAY_DIR,
 };
