@@ -38,7 +38,10 @@ function createInstance({
   initialLng,
   callback,
 }) {
-  const container = createContainer(root, width, height, () => container.remove());
+  const {
+    container,
+    tip,
+  } = createContainer(root, width, height, () => container.remove());
 
   const player = new PanophotoPlayer({
     container,
@@ -47,6 +50,7 @@ function createInstance({
     height,
     initialLat,
     initialLng,
+    tip,
   });
   optimizeMobile(root);
   execute(callback, null, {

@@ -44,6 +44,7 @@ export default class PanophotoPlayer {
     this.photosSrcUrl = params.photosSrcUrl;
     this.width = params.width;
     this.height = params.height;
+    this.tip = params.tip;
     this.initialLng = isNumber(params.initialLng) ? ((params.initialLng + 360) % 360) : 0;
     this.initialLat = isNumber(params.initialLat) ? clamp(params.initialLat, LAT_MIN, LAT_MAX) : 0;
     this.swipeDeltaMagicNumber = PARAMS_DEFAULT.SWIPE_SENSITIVITY * SWIPE.DELTA_FACTOR;
@@ -156,6 +157,8 @@ export default class PanophotoPlayer {
     this.clearUpdateTimer();
     // Dimension includes width and height of container, window orientation (portrait or landscape)
     this.updateDimension();
+    // Hide the tip
+    this.tip.hide();
   }
 
   // Start playing
@@ -419,6 +422,7 @@ export default class PanophotoPlayer {
             this.play.mode = PLAY_MODE.AUTO;
             this.autoPlay.startWaitTime = now();
             this.autoPlay.accumulativeMovement = 0;
+            this.tip.show();
           }
         }
       }
@@ -432,6 +436,7 @@ export default class PanophotoPlayer {
           this.play.mode = PLAY_MODE.MANUAL;
           this.autoPlay.startWaitTime = now();
           this.autoPlay.accumulativeMovement = 0;
+          this.tip.hide();
         } else {
           if ((now() - this.autoPlay.startWaitTime) >= PARAMS_DEFAULT.AUTO_TO_MANUAL_TIME) {
             // Accumulative momement does not exceed the limit,
