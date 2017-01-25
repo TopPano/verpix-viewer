@@ -79,7 +79,7 @@ tasks.set('bundle', () => {
 // -----------------------------------------------------------------------------
 tasks.set('copy', () => {
   // Each target could be a file or directory
-  const targets = ['favicon.ico', 'tip-tilt.svg'];
+  const targets = ['favicon.ico', 'assets'];
   mkdir('-p', 'public/dist');
   targets.forEach((target) => {
     cp('-R', `public/${target}`, 'public/dist');
@@ -151,7 +151,7 @@ tasks.set('start', () => {
             middleware: [
               webpackDevMiddleware,
               webpackHotMiddleware,
-              // Serve index.html for all unknown requests
+              // Customized middleware
               (req, res, next) => {
                 next();
               },

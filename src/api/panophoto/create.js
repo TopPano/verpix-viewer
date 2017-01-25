@@ -38,7 +38,7 @@ function createInstance({
   initialLng,
   callback,
 }) {
-  const container = createContainer(root, width, height);
+  const container = createContainer(root, width, height, () => container.remove());
 
   const player = new PanophotoPlayer({
     container,

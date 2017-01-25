@@ -4,12 +4,20 @@ import { applyStyle } from 'lib/dom';
 import { isMobile } from 'lib/devices';
 import { CUT_BASED_ON } from 'constants/common';
 import config from 'config';
+import createLogo from '../common/createLogo';
 
-export default function createCanvas(root, canvasDimension, wrapperDimension, cutBasedOn) {
+export default function createCanvas(
+  root,
+  canvasDimension,
+  wrapperDimension,
+  cutBasedOn,
+  onMutation
+) {
   const outWrapper = document.createElement('DIV');
   const inWrapper = document.createElement('DIV');
   const tip = new Image();
   const canvas = document.createElement('CANVAS');
+  const logo = createLogo(onMutation);
   const wrapperRatio = Math.round((wrapperDimension.height / wrapperDimension.width) * 100);
 
   // TODO: How to pass the no-param-reassign rule from eslint ?
@@ -51,7 +59,7 @@ export default function createCanvas(root, canvasDimension, wrapperDimension, cu
   // Attributes for tip
   // TODO: Tip for desktop
   if (isMobile()) {
-    tip.src = `${config.staticRoot}/tip-tilt.svg`;
+    tip.src = `${config.staticRoot}/assets/tip-tilt.svg`;
     tip.style.width = '80px';
     tip.style.height = '60px';
     tip.style.opacity = '0';
@@ -74,6 +82,7 @@ export default function createCanvas(root, canvasDimension, wrapperDimension, cu
 
   root.appendChild(outWrapper);
   outWrapper.appendChild(inWrapper);
+  outWrapper.appendChild(logo);
   inWrapper.appendChild(canvas);
   inWrapper.appendChild(tip);
 

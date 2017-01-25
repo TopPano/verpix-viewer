@@ -213,7 +213,7 @@ export default function create(source, {
       const {
         container,
         tip,
-      } = createCanvas(root, origDimension, wrapperDimension, cutBasedOn);
+      } = createCanvas(root, origDimension, wrapperDimension, cutBasedOn, () => container.remove());
 
       if (!isGADisabled) {
         sendGAEvent(config.ga.trackingId, type, mediaId, () => {
@@ -253,7 +253,7 @@ export default function create(source, {
       const {
         container,
         tip,
-      } = createCanvas(root, origDimension, wrapperDimension, cutBasedOn);
+      } = createCanvas(root, origDimension, wrapperDimension, cutBasedOn, () => container.remove());
 
       createInstance(
         root,
@@ -286,7 +286,7 @@ export default function create(source, {
     const {
       container,
       tip,
-    } = createCanvas(root, origDimension, wrapperDimension, cutBasedOn);
+    } = createCanvas(root, origDimension, wrapperDimension, cutBasedOn, () => container.remove());
 
     const player = new LivephotoPlayer({
       container,
