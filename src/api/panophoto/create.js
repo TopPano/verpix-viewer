@@ -36,6 +36,7 @@ function createInstance({
   height,
   initialLat,
   initialLng,
+  autoplay,
   callback,
 }) {
   const {
@@ -51,6 +52,7 @@ function createInstance({
     height,
     initialLat,
     initialLng,
+    autoplay,
     brand,
     tip,
   });
@@ -78,6 +80,7 @@ export default function create(source, params, callback) {
   let photosSrcUrl;
   let initialLat;
   let initialLng;
+  let autoplay;
   let disableCDN;
   let disableGA;
 
@@ -91,6 +94,7 @@ export default function create(source, params, callback) {
     height = getDataAttribute(root, 'height');
     initialLat = getDataAttribute(root, 'initial-lat');
     initialLng = getDataAttribute(root, 'initial-lng');
+    autoplay = getDataAttribute(root, 'autoplay');
     disableCDN = getDataAttribute(root, 'disable-cdn');
     disableGA = getDataAttribute(root, 'disable-ga');
   } else if (isString(source)) {
@@ -103,6 +107,7 @@ export default function create(source, params, callback) {
     height = params.height;
     initialLat = params.initialLat;
     initialLng = params.initialLng;
+    autoplay = params.autoplay;
     disableCDN = params.disableCDN;
     disableGA = params.disableGA;
     setDataAttribute(root, 'id', params.id);
@@ -118,6 +123,7 @@ export default function create(source, params, callback) {
     height = params.height;
     initialLat = params.initialLat;
     initialLng = params.initialLng;
+    autoplay = params.autoplay;
     setDataAttribute(root, 'width', params.width);
     setDataAttribute(root, 'height', params.height);
   }
@@ -144,6 +150,7 @@ export default function create(source, params, callback) {
         height,
         initialLat: isNumber(initialLat) ? initialLat : lat,
         initialLng: isNumber(initialLng) ? initialLng : lng,
+        autoplay,
         callback,
       });
     }).catch((err) => {
@@ -157,6 +164,7 @@ export default function create(source, params, callback) {
       height,
       initialLat,
       initialLng,
+      autoplay,
       callback,
     });
   } else {
