@@ -37,13 +37,19 @@ function createInstance({
   initialLat,
   initialLng,
   autoplay,
+  logo,
+  redirectURL,
   callback,
 }) {
   const {
     container,
     brand,
     tip,
-  } = createContainer(root, width, height, () => container.remove());
+  } = createContainer(root, width, height, {
+    logo,
+    redirectURL,
+    onMutation: () => container.remove(),
+  });
 
   const player = new PanophotoPlayer({
     container,

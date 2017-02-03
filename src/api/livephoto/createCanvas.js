@@ -10,13 +10,13 @@ export default function createCanvas(
   canvasDimension,
   wrapperDimension,
   cutBasedOn,
-  onMutation
+  logoParams
 ) {
   const outWrapper = document.createElement('DIV');
   const inWrapper = document.createElement('DIV');
   const tip = createTip();
   const canvas = document.createElement('CANVAS');
-  const logo = createLogo(onMutation);
+  const logo = createLogo(logoParams);
   const wrapperRatio = Math.round((wrapperDimension.height / wrapperDimension.width) * 100);
 
   // TODO: How to pass the no-param-reassign rule from eslint ?
