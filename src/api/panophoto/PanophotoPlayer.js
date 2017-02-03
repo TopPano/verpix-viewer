@@ -49,7 +49,7 @@ export default class PanophotoPlayer {
     this.initialLng = isNumber(params.initialLng) ? ((params.initialLng + 360) % 360) : 0;
     this.initialLat = isNumber(params.initialLat) ? clamp(params.initialLat, LAT_MIN, LAT_MAX) : 0;
     // eslint-disable-next-line no-unneeded-ternary
-    this.autoplayEnabled = (params.autoplay === false) ? false : true;
+    this.isAutoplayEnabled = (params.autoplay === false) ? false : true;
     this.swipeDeltaMagicNumber = PARAMS_DEFAULT.SWIPE_SENSITIVITY * SWIPE.DELTA_FACTOR;
     this.rotationDeltaMagicNumber = PARAMS_DEFAULT.ROTATION_SENSITIVITY * ROTATION.DELTA_FACTOR;
   }
@@ -116,6 +116,25 @@ export default class PanophotoPlayer {
     this.updateDimension();
   }
 
+  // Entry function for setting autoplay
+  setAutoplay = (autoplay) => {
+    // eslint-disable-next-line no-unneeded-ternary
+    const newAutoplay = (autoplay === false) ? false : true;
+
+    // Case of changing from enabling to disabling autoplay, and just in autoplay mode
+    if ((this.isAutoplayEnabled && !newAutoplay) && (this.play.mode === PLAY_MODE.AUTO)) {
+      this.tip.hide();
+      this.play.mode = PLAY_MODE.MANUAL;
+    }
+    // Case of changing from enabling to disabling or disalbing to enabling autoplay
+    if (this.isAutoplayEnabled !== newAutoplay) {
+      this.autoPlay.startWaitTime = now();
+      this.autoPlay.accumulativeMovement = 0;
+    }
+
+    this.isAutoplayEnabled = newAutoplay;
+  }
+
   // Initialize or reset writable member variables
   resetMemberVars() {
     // Scene for rendering
@@ -172,7 +191,7 @@ export default class PanophotoPlayer {
     this.buildScene(this.photosSrcUrl, () => {
       this.addEventHandlers();
       this.play.mode = PLAY_MODE.MANUAL;
-      if (this.autoplayEnabled) {
+      if (this.isAutoplayEnabled) {
         this.autoPlay.startWaitTime = now();
       }
       this.animationTimer = raf(this.onAnimationFrame);
@@ -406,7 +425,7 @@ export default class PanophotoPlayer {
 
     // Update the accumualtive movement for changing play mode
     // (From manual to auto or from auto to manual)
-    if (this.autoplayEnabled) {
+    if (this.isAutoplayEnabled) {
       this.autoPlay.accumulativeMovement +=
         Math.abs(appliedSwipeDelta.x) +
         Math.abs(appliedRotationDelta.x) +
@@ -419,7 +438,7 @@ export default class PanophotoPlayer {
       newLng = newLng - appliedSwipeDelta.x - appliedRotationDelta.x;
       newLat = newLat + appliedSwipeDelta.y + appliedRotationDelta.y;
 
-      if (this.autoplayEnabled) {
+      if (this.isAutoplayEnabled) {
         if (this.autoPlay.accumulativeMovement > AUTO_PLAY.MANUAL_TO_AUTO_MOVEMENT_THRESHOLD) {
           // Accumulative momement exceeds the limit,
           // restart calculating it
@@ -437,7 +456,7 @@ export default class PanophotoPlayer {
         }
       }
     } else if (this.play.mode === PLAY_MODE.AUTO) {
-      if (this.autoplayEnabled) {
+      if (this.isAutoplayEnabled) {
         newLng += AUTO_PLAY.LNG_DELTA;
 
         if (this.autoPlay.accumulativeMovement >= AUTO_PLAY.AUTO_TO_MANUAL_MOVEMENT_THRESHOLD) {

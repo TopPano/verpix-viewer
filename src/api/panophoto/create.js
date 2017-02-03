@@ -68,6 +68,7 @@ function createInstance({
       setWrapperDimension(root, w, h);
       player.setDimension(w, h);
     },
+    setAutoplay: (val) => player.setAutoplay(val),
   });
 }
 
