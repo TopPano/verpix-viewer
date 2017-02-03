@@ -32,7 +32,7 @@ const ROTATION = {
 };
 
 const AUTO_PLAY = {
-  MANUAL_TO_AUTO_MOVEMENT_THRESHOLD: isMobile() ? 3 : 1,
+  MANUAL_TO_AUTO_MOVEMENT_THRESHOLD: isMobile() ? 30 : 10,
   AUTO_TO_MANUAL_MOVEMENT_THRESHOLD: isMobile() ? 1 : 0.2,
   LNG_DELTA: 0.04,
 };
