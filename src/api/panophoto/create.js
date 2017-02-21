@@ -152,7 +152,7 @@ export default function create(source, params, callback) {
 
       createInstance({
         root,
-        photosSrcUrl: constructPhotoUrls(mediaId, res, disableCDN),
+        photosSrcUrl: constructPhotoUrls(mediaId, res, width, height, disableCDN),
         width,
         height,
         initialLat: isNumber(initialLat) ? initialLat : lat,

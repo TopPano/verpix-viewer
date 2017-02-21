@@ -1,8 +1,12 @@
 import range from 'lodash/range';
 
-import { isMobile } from 'lib/devices';
-
-export default function constructPhotoUrls(mediaId, mediaObj, isCDNDisabled) {
+export default function constructPhotoUrls(
+  mediaId,
+  mediaObj,
+  visibleWidth,
+  visibleHeight,
+  isCDNDisabled = false
+) {
   const {
     cdnUrl,
     storeUrl,
@@ -10,8 +14,8 @@ export default function constructPhotoUrls(mediaId, mediaObj, isCDNDisabled) {
     shardingKey,
   } = mediaObj.content;
   const storeRoot = isCDNDisabled ? storeUrl : cdnUrl;
-  // TODO: Dynamically choose the best quality
-  const selectedIdx = isMobile() ? quality.length - 1 : 0;
+  // TODO: More rules to choose the best quality
+  const selectedIdx = (Math.max(visibleWidth, visibleHeight) <= 300) ? quality.length - 1 : 0;
   const selectedQuality = quality[selectedIdx];
 
   return range(0, selectedQuality.tiles).map((idx) => (
