@@ -9,7 +9,7 @@ import raf from 'raf';
 
 import { PARAMS_DEFAULT } from 'constants/panophoto';
 import { PLAY_MODE } from 'constants/common';
-import { isMobile, isIOS } from 'lib/devices';
+import { isMobile, isIOS, isIframe } from 'lib/devices';
 import { getPosition } from 'lib/events/click';
 import execute from 'lib/utils/execute';
 import EVENTS from 'constants/events';
@@ -640,12 +640,13 @@ export default class PanophotoPlayer {
 
   // Return the window orientation is portrait or not
   isPortrait() {
+    const windowObj = isIframe() ? window.top : window;
     let isPortrait = true;
 
-    if (window.orientation) {
-      isPortrait = (window.orientation === 0 || window.orientation === 180);
-    } else if (window.innerHeight !== null && window.innerWidth !== null) {
-      isPortrait = window.innerHeight > window.innerWidth;
+    if (isNumber(windowObj.orientation)) {
+      isPortrait = (windowObj.orientation === 0 || windowObj.orientation === 180);
+    } else if (isNumber(windowObj.innerHeight) && isNumber(windowObj.innerWidth)) {
+      isPortrait = windowObj.innerHeight > windowObj.innerWidth;
     } else {
       // TODO: any other case ?
     }
