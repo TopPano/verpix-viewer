@@ -8,8 +8,8 @@ export default function createTip() {
   // Attributes for tip
   if (isMobile()) {
     tip.src = `${config.staticRoot}/assets/tip-tilt.svg`;
-    tip.width = 60;
-    tip.height = 45;
+    tip.width = 80;
+    tip.height = 60;
   } else {
     tip.src = `${config.staticRoot}/assets/tip-mouse.svg`;
     tip.width = 45;

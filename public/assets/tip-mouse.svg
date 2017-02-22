@@ -6,10 +6,10 @@
       fill-rule: evenodd;
     }
     .contour {
-      fill: #AAAAAA;
+      fill: #7F7F7F;
     }
     .body {
-      fill: #DDDDDD;
+      fill: #EEEEEE;
     }
     .left-btn {
       fill: #E0BCC9;
