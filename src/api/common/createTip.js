@@ -2,7 +2,7 @@ import { applyStyle } from 'lib/dom';
 import config from 'config';
 import { isMobile } from 'lib/devices';
 
-export default function createTip() {
+export default function createTip({ onTop = false }) {
   const tip = new Image();
 
   // Attributes for tip
@@ -20,6 +20,9 @@ export default function createTip() {
   tip.style.left = '50%';
   tip.style.bottom = '12px';
   applyStyle(tip, 'transform', 'translateX(-50%)');
+  if (onTop) {
+    tip.style.zIndex = '99999999';
+  }
   // states and methods for tip
   tip.isShown = false;
   tip.show = () => {

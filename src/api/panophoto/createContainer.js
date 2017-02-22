@@ -5,13 +5,13 @@ import createBrand from './createBrand';
 import createTip from '../common/createTip';
 import createLogo from '../common/createLogo';
 
-export default function createContainer(root, width, height, altPhotoUrl, logoParams) {
+export default function createContainer(root, width, height, altPhotoUrl, tipParams, logoParams) {
   // TODO: How to pass the no-param-reassign rule from eslint ?
   const wrapper = document.createElement('DIV');
   const container = document.createElement('DIV');
   const altPhoto = createAltPhoto(altPhotoUrl);
   const brand = createBrand();
-  const tip = createTip();
+  const tip = createTip(tipParams);
   const logo = createLogo(logoParams);
   const wrapperRatio = Math.round((height / width) * 100);
 

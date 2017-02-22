@@ -38,6 +38,7 @@ function createInstance({
   initialLat,
   initialLng,
   autoplay,
+  tipOnTop,
   logo,
   redirectURL,
   callback,
@@ -47,7 +48,7 @@ function createInstance({
     altPhoto,
     brand,
     tip,
-  } = createContainer(root, width, height, altPhotoUrl, {
+  } = createContainer(root, width, height, altPhotoUrl, { onTop: tipOnTop }, {
     logo,
     redirectURL,
     onMutation: () => container.remove(),
@@ -94,7 +95,7 @@ function createErrInstance({
   const {
     container,
     altPhoto,
-  } = createContainer(root, width, height, altPhotoUrl, {
+  } = createContainer(root, width, height, altPhotoUrl, {}, {
     logo,
     redirectURL,
     onMutation: () => container.remove(),
@@ -119,6 +120,7 @@ export default function create(source, params, callback) {
   let initialLng = params.initialLng;
   let autoplay = params.autoplay;
   let altPhotoUrl = params.altPhoto;
+  let tipOnTop = params.tipOnTop;
   let disableCDN = params.disableCDN;
   let disableGA = params.disableGA;
 
@@ -134,6 +136,7 @@ export default function create(source, params, callback) {
     initialLng = getDataAttribute(root, 'initial-lng');
     autoplay = getDataAttribute(root, 'autoplay');
     altPhotoUrl = getDataAttribute(root, 'alt-photo');
+    tipOnTop = getDataAttribute(root, 'tip-on-top');
     disableCDN = getDataAttribute(root, 'disable-cdn');
     disableGA = getDataAttribute(root, 'disable-ga');
   } else if (isString(source)) {
@@ -175,6 +178,7 @@ export default function create(source, params, callback) {
         initialLat: isNumber(initialLat) ? initialLat : lat,
         initialLng: isNumber(initialLng) ? initialLng : lng,
         autoplay,
+        tipOnTop,
         callback,
       });
     }).catch((err) => {
@@ -196,6 +200,7 @@ export default function create(source, params, callback) {
       initialLat,
       initialLng,
       autoplay,
+      tipOnTop,
       callback,
     });
   } else {
