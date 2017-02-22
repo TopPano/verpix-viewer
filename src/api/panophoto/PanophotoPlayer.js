@@ -51,6 +51,10 @@ export default class PanophotoPlayer {
     this.initialLat = isNumber(params.initialLat) ? clamp(params.initialLat, LAT_MIN, LAT_MAX) : 0;
     // eslint-disable-next-line no-unneeded-ternary
     this.isAutoplayEnabled = (params.autoplay === false) ? false : true;
+    this.manualToAutoTime =
+      (isNumber(params.idleDuration) && params.idleDuration > 0) ?
+      parseInt(params.idleDuration * 1000, 10) :
+      PARAMS_DEFAULT.MANUAL_TO_AUTO_TIME;
     this.swipeDeltaMagicNumber = PARAMS_DEFAULT.SWIPE_SENSITIVITY * SWIPE.DELTA_FACTOR;
     this.rotationDeltaMagicNumber = PARAMS_DEFAULT.ROTATION_SENSITIVITY * ROTATION.DELTA_FACTOR;
   }
@@ -446,7 +450,7 @@ export default class PanophotoPlayer {
           this.autoPlay.startWaitTime = now();
           this.autoPlay.accumulativeMovement = 0;
         } else {
-          if ((now() - this.autoPlay.startWaitTime) >= PARAMS_DEFAULT.MANUAL_TO_AUTO_TIME) {
+          if ((now() - this.autoPlay.startWaitTime) >= this.manualToAutoTime) {
             // Accumulative momement does not exceed the limit in waiting duration,
             // change from manual to auto mode
             this.play.mode = PLAY_MODE.AUTO;

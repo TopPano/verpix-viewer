@@ -39,6 +39,7 @@ function createInstance({
   initialLng,
   autoplay,
   tipOnTop,
+  idleDuration,
   logo,
   redirectURL,
   callback,
@@ -62,6 +63,7 @@ function createInstance({
     initialLat,
     initialLng,
     autoplay,
+    idleDuration,
     altPhoto,
     brand,
     tip,
@@ -121,6 +123,7 @@ export default function create(source, params, callback) {
   let autoplay = params.autoplay;
   let altPhotoUrl = params.altPhoto;
   let tipOnTop = params.tipOnTop;
+  let idleDuration = params.idleDuration;
   let disableCDN = params.disableCDN;
   let disableGA = params.disableGA;
 
@@ -137,6 +140,7 @@ export default function create(source, params, callback) {
     autoplay = getDataAttribute(root, 'autoplay');
     altPhotoUrl = getDataAttribute(root, 'alt-photo');
     tipOnTop = getDataAttribute(root, 'tip-on-top');
+    idleDuration = getDataAttribute(root, 'idle-duration');
     disableCDN = getDataAttribute(root, 'disable-cdn');
     disableGA = getDataAttribute(root, 'disable-ga');
   } else if (isString(source)) {
@@ -179,6 +183,7 @@ export default function create(source, params, callback) {
         initialLng: isNumber(initialLng) ? initialLng : lng,
         autoplay,
         tipOnTop,
+        idleDuration,
         callback,
       });
     }).catch((err) => {
@@ -201,6 +206,7 @@ export default function create(source, params, callback) {
       initialLng,
       autoplay,
       tipOnTop,
+      idleDuration,
       callback,
     });
   } else {
