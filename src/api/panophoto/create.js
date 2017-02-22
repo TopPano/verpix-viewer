@@ -32,6 +32,7 @@ function setWrapperDimension(root, width, height) {
 function createInstance({
   root,
   photosSrcUrl,
+  altPhotoUrl,
   width,
   height,
   initialLat,
@@ -43,9 +44,10 @@ function createInstance({
 }) {
   const {
     container,
+    altPhoto,
     brand,
     tip,
-  } = createContainer(root, width, height, {
+  } = createContainer(root, width, height, altPhotoUrl, {
     logo,
     redirectURL,
     onMutation: () => container.remove(),
@@ -59,6 +61,7 @@ function createInstance({
     initialLat,
     initialLng,
     autoplay,
+    altPhoto,
     brand,
     tip,
   });
@@ -78,18 +81,46 @@ function createInstance({
   });
 }
 
+function createErrInstance({
+  root,
+  altPhotoUrl,
+  width,
+  height,
+  logo,
+  redirectURL,
+  callback,
+  err,
+}) {
+  const {
+    container,
+    altPhoto,
+  } = createContainer(root, width, height, altPhotoUrl, {
+    logo,
+    redirectURL,
+    onMutation: () => container.remove(),
+  });
+
+  execute(callback, err, {
+    root,
+    showAltPhoto: () => altPhoto.show(),
+    hideAltPhoto: () => altPhoto.hide(),
+  });
+}
+
 export default function create(source, params, callback) {
   let createMethod = CREATE_METHOD.OTHERS;
-  let root;
+  let root = document.createElement('DIV');
   let mediaId;
-  let width;
-  let height;
   let photosSrcUrl;
-  let initialLat;
-  let initialLng;
-  let autoplay;
-  let disableCDN;
-  let disableGA;
+  // TODO: types & values check for parameters
+  let width = params.width;
+  let height = params.height;
+  let initialLat = params.initialLat;
+  let initialLng = params.initialLng;
+  let autoplay = params.autoplay;
+  let altPhotoUrl = params.altPhoto;
+  let disableCDN = params.disableCDN;
+  let disableGA = params.disableGA;
 
   if (isDom(source)) {
     // Source is a dom element, just use it.
@@ -102,21 +133,13 @@ export default function create(source, params, callback) {
     initialLat = getDataAttribute(root, 'initial-lat');
     initialLng = getDataAttribute(root, 'initial-lng');
     autoplay = getDataAttribute(root, 'autoplay');
+    altPhotoUrl = getDataAttribute(root, 'alt-photo');
     disableCDN = getDataAttribute(root, 'disable-cdn');
     disableGA = getDataAttribute(root, 'disable-ga');
   } else if (isString(source)) {
     // Source is a string, use it as media ID.
     createMethod = CREATE_METHOD.ID;
-    root = document.createElement('DIV');
     mediaId = source;
-    // TODO: types & values check for parameters
-    width = params.width;
-    height = params.height;
-    initialLat = params.initialLat;
-    initialLng = params.initialLng;
-    autoplay = params.autoplay;
-    disableCDN = params.disableCDN;
-    disableGA = params.disableGA;
     setDataAttribute(root, 'id', params.id);
     setDataAttribute(root, 'width', params.width);
     setDataAttribute(root, 'height', params.height);
@@ -124,13 +147,6 @@ export default function create(source, params, callback) {
     // Source is an array of string, use a as photos source urls.
     createMethod = CREATE_METHOD.PHOTOS_URLS;
     photosSrcUrl = source;
-    root = document.createElement('DIV');
-    // TODO: types & values check for parameters
-    width = params.width;
-    height = params.height;
-    initialLat = params.initialLat;
-    initialLng = params.initialLng;
-    autoplay = params.autoplay;
     setDataAttribute(root, 'width', params.width);
     setDataAttribute(root, 'height', params.height);
   }
@@ -153,6 +169,7 @@ export default function create(source, params, callback) {
       createInstance({
         root,
         photosSrcUrl: constructPhotoUrls(mediaId, res, width, height, disableCDN),
+        altPhotoUrl,
         width,
         height,
         initialLat: isNumber(initialLat) ? initialLat : lat,
@@ -161,7 +178,14 @@ export default function create(source, params, callback) {
         callback,
       });
     }).catch((err) => {
-      execute(callback, err);
+      createErrInstance({
+        root,
+        altPhotoUrl,
+        width,
+        height,
+        callback,
+        err,
+      });
     });
   } else if (createMethod === CREATE_METHOD.PHOTOS_URLS) {
     createInstance({
@@ -175,9 +199,13 @@ export default function create(source, params, callback) {
       callback,
     });
   } else {
-    execute(
+    createErrInstance({
+      root,
+      altPhotoUrl,
+      width,
+      height,
       callback,
-      new Error('Required argument `source` must be DOM element, string or array of string')
-    );
+      err: new Error('Required argument `source` must be DOM element, string or array of string'),
+    });
   }
 }

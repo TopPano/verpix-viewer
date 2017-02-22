@@ -17,7 +17,7 @@ window.addEventListener('load', () => {
 
     panophoto.create(root, params, (err, instance) => {
       if (err) {
-        // TODO: Error handling
+        instance.showAltPhoto();
       } else {
         instance.start();
       }

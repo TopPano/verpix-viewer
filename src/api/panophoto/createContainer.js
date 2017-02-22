@@ -1,13 +1,15 @@
 /* eslint-disable no-param-reassign */
 
+import createAltPhoto from './createAltPhoto';
 import createBrand from './createBrand';
 import createTip from '../common/createTip';
 import createLogo from '../common/createLogo';
 
-export default function createContainer(root, width, height, logoParams) {
+export default function createContainer(root, width, height, altPhotoUrl, logoParams) {
   // TODO: How to pass the no-param-reassign rule from eslint ?
   const wrapper = document.createElement('DIV');
   const container = document.createElement('DIV');
+  const altPhoto = createAltPhoto(altPhotoUrl);
   const brand = createBrand();
   const tip = createTip();
   const logo = createLogo(logoParams);
@@ -32,12 +34,14 @@ export default function createContainer(root, width, height, logoParams) {
 
   root.appendChild(wrapper);
   wrapper.appendChild(container);
+  container.appendChild(altPhoto);
   container.appendChild(brand);
   container.appendChild(tip);
   container.appendChild(logo);
 
   return {
     container,
+    altPhoto,
     brand,
     tip,
   };

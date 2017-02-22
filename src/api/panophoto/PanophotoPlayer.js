@@ -44,6 +44,7 @@ export default class PanophotoPlayer {
     this.photosSrcUrl = params.photosSrcUrl;
     this.width = params.width;
     this.height = params.height;
+    this.altPhoto = params.altPhoto;
     this.brand = params.brand;
     this.tip = params.tip;
     this.initialLng = isNumber(params.initialLng) ? ((params.initialLng + 360) % 360) : 0;
@@ -372,7 +373,7 @@ export default class PanophotoPlayer {
       }, () => {
         // TODO: function called when download progresses
       }, () => {
-        // TODO: Error handling.
+        this.altPhoto.show();
       });
     });
   }
