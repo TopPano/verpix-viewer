@@ -247,12 +247,12 @@ export default class PanophotoPlayer {
 
   // Add handlers for common events, such as device orientation
   removeCommonHandlers() {
-    window.removeEventListener('deviceorientation', this.handleDeviceOrientation);
+    window.removeEventListener('orientationchange', this.handleOrientationChange);
   }
 
   // Remove handlers for common events, such as device orientation
   addCommonHandlers() {
-    window.addEventListener('deviceorientation', this.handleDeviceOrientation);
+    window.addEventListener('orientationchange', this.handleOrientationChange);
   }
 
   // Add handlers for swipe (click or touch)
@@ -613,7 +613,7 @@ export default class PanophotoPlayer {
   }
 
   // Handler for device orientation event
-  handleDeviceOrientation = () => {
+  handleOrientationChange = () => {
     this.updateDimension();
   }
 
