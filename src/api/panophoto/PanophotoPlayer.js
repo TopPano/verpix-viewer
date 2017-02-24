@@ -640,15 +640,30 @@ export default class PanophotoPlayer {
 
   // Return the window orientation is portrait or not
   isPortrait() {
-    const windowObj = isIframe() ? window.top : window;
+    if (!isMobile()) {
+      return true;
+    }
+
     let isPortrait = true;
 
-    if (isNumber(windowObj.orientation)) {
-      isPortrait = (windowObj.orientation === 0 || windowObj.orientation === 180);
-    } else if (isNumber(windowObj.innerHeight) && isNumber(windowObj.innerWidth)) {
-      isPortrait = windowObj.innerHeight > windowObj.innerWidth;
+    if (isNumber(window.orientation)) {
+      // In most cases, we can use window.orientation directly
+      isPortrait = (window.orientation === 0 || window.orientation === 180);
+    } else if (!isIframe() && isNumber(window.innerHeight) && isNumber(window.innerWidth)) {
+      // In iframe, (innerWidth, innerHeight) equals to (iframe width, iframe height).
+      // In non-iframe, (innerWidth, innerHeight) equals to (viewport width, viewport height).
+      // So we can only use them in non-iframe
+      isPortrait = window.innerHeight > window.innerWidth;
+    } else if (!isIOS() && window.screen && isNumber(window.screen.height) && isNumber(window.screen.width)) { // eslint-disable-line max-len
+      // TODO: more tests on other devices
+      // In none-iOS, screen width and height depend on current orientation.
+      // In iOS, screen width and height are fixed.
+      // So we can only use them in non-iOS.
+      isPortrait = window.screen.height > window.screen.width;
     } else {
       // TODO: any other case ?
+      // For exmaple, maybe we case use window.outerHeight and window.outerWidth,
+      // but they return 0 in some devices such as iOS.
     }
 
     return isPortrait;
