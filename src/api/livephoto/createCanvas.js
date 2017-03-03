@@ -14,7 +14,7 @@ export default function createCanvas(
 ) {
   const outWrapper = document.createElement('DIV');
   const inWrapper = document.createElement('DIV');
-  const tip = createTip();
+  const tip = createTip({});
   const canvas = document.createElement('CANVAS');
   const logo = createLogo(logoParams);
   const wrapperRatio = Math.round((wrapperDimension.height / wrapperDimension.width) * 100);
