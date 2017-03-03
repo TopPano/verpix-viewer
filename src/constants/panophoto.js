@@ -15,6 +15,14 @@ export const PARAMS_DEFAULT = {
   AUTO_TO_MANUAL_TIME: 100, // The period (milliseconds) to wait for changing from auto to manual mode
 };
 
+export const SCENE_BRIGHTNESS_MODE = {
+  BRIGHT: 'BRIGHT',
+  DIM: 'DIM',
+  BRIGHT_TO_DIM: 'BRIGHT_TO_DIM',
+  DIM_TO_BRIGTH: 'DIM_TO_BRIGTH',
+};
+
 export default {
   PARAMS_DEFAULT,
+  SCENE_BRIGHTNESS_MODE,
 };
