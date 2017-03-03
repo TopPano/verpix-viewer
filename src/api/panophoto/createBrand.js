@@ -6,25 +6,29 @@ export default function createBrand() {
 
   // Attributes for brand
   brand.src = `${config.staticRoot}/assets/brand-pano.svg`;
-  brand.width = 61;
-  brand.height = 62;
+  brand.width = 70;
+  brand.height = 70;
   brand.style.position = 'absolute';
   brand.style.left = '50%';
   brand.style.bottom = '50%';
+  brand.style.visibility = 'hidden';
   brand.style.opacity = '0';
   applyStyle(brand, 'transform', 'translate(-50%, 50%)');
   // States and method for brand
   brand.isShown = false;
   brand.show = () => {
     if (!brand.isShown) {
-      applyStyle(brand, 'transition', 'opacity 1.5s linear');
+      // TODO: Restart brand animation at show
+      applyStyle(brand, 'transition', 'visibility 0s linear 1.5s, opacity 1.5s linear');
+      brand.style.visibility = 'visible';
       brand.style.opacity = '1';
       brand.isShown = true;
     }
   };
   brand.hide = () => {
     if (brand.isShown) {
-      applyStyle(brand, 'transition', 'opacity .5s linear');
+      applyStyle(brand, 'transition', 'visibility 0s linear .5s, opacity .5s linear');
+      brand.style.visibility = 'hidden';
       brand.style.opacity = '0';
       brand.isShown = false;
     }

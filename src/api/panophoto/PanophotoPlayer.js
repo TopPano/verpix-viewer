@@ -184,8 +184,14 @@ export default class PanophotoPlayer {
     this.clearUpdateTimer();
     // Dimension includes width and height of container, window orientation (portrait or landscape)
     this.updateDimension();
-    // Hide the brand
-    this.brand.hide();
+    // Reset the brand context
+    this.brandContext = {
+      instance: this.brand,
+      showBrandAtStart: PARAMS_DEFAULT.SHOW_BRAND_AT_START,
+      hideStartedBrandAuto: PARAMS_DEFAULT.HIDE_STARTED_BRAND_AUTO,
+      hideStartedBrandAutoDuration: PARAMS_DEFAULT.HIDE_STARTED_BRAND_AUTO_DURATION,
+    };
+    this.brandContext.instance.hide();
     // Hide the tip
     this.tip.hide();
   }
@@ -199,12 +205,10 @@ export default class PanophotoPlayer {
       if (this.isAutoplayEnabled) {
         this.autoPlay.startWaitTime = now();
       }
+      if (this.brandContext.showBrandAtStart) {
+        this.showStartedBrand();
+      }
       this.animationTimer = raf(this.onAnimationFrame);
-      this.brand.show();
-      setTimeout(() => {
-        this.brand.hide();
-        setTimeout(() => this.brand.remove(), 500);
-      }, 4000);
     });
   }
 
@@ -457,6 +461,7 @@ export default class PanophotoPlayer {
             this.autoPlay.startWaitTime = now();
             this.autoPlay.accumulativeMovement = 0;
             this.tip.show();
+            this.brandContext.instance.show();
           }
         }
       }
@@ -471,6 +476,7 @@ export default class PanophotoPlayer {
           this.autoPlay.startWaitTime = now();
           this.autoPlay.accumulativeMovement = 0;
           this.tip.hide();
+          this.brandContext.instance.hide();
         } else {
           if ((now() - this.autoPlay.startWaitTime) >= PARAMS_DEFAULT.AUTO_TO_MANUAL_TIME) {
             // Accumulative momement does not exceed the limit,
@@ -635,6 +641,29 @@ export default class PanophotoPlayer {
     if (this.renderer) {
       // Update renderer size
       this.renderer.setSize(this.dimension.width, this.dimension.height);
+    }
+  }
+
+  // Show brand at start
+  showStartedBrand() {
+    this.brandContext.instance.show();
+
+    let hideStartedBrandTimer;
+    const hideStartedBrand = () => {
+      if (this.play.mode !== PLAY_MODE.AUTO) {
+        this.brandContext.instance.hide();
+        this.container.removeEventListener(EVENTS.CLICK_START, hideStartedBrand);
+        clearTimeout(hideStartedBrandTimer);
+      }
+    };
+    // Hide the started brand after first click
+    this.container.addEventListener(EVENTS.CLICK_START, hideStartedBrand);
+    // Automatically hide the started brand after a while
+    if (this.brandContext.hideStartedBrandAuto) {
+      hideStartedBrandTimer = setTimeout(
+        hideStartedBrand,
+        this.brandContext.hideStartedBrandAutoDuration
+      );
     }
   }
 
