@@ -19,6 +19,7 @@ export default function createTip({ onTop = false }) {
   tip.style.position = 'absolute';
   tip.style.left = '50%';
   tip.style.bottom = '12px';
+  applyStyle(tip, 'pointer-events', 'none');
   applyStyle(tip, 'transform', 'translateX(-50%)');
   if (onTop) {
     tip.style.zIndex = '99999999';
