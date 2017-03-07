@@ -21,6 +21,7 @@ import GyroNorm from 'external/gyronorm';
 const SPHERE_RADIUS = 1000;
 const LAT_MAX = 85;
 const LAT_MIN = -85;
+
 const BRIGHTENTED_OPACITY = 1;
 const DIMMED_OPACITY = 0.7;
 const BRIGHTNESS_CHANGE_STEP = 0.005;
@@ -42,6 +43,8 @@ const AUTO_PLAY = {
   AUTO_TO_MANUAL_MOVEMENT_THRESHOLD: isMobile() ? 1 : 0.2,
   LNG_DELTA: 0.04,
 };
+
+const HIDE_STARTED_BRAND_ROTATION_THRESHOLD = 0.1;
 
 export default class PanophotoPlayer {
   constructor(params) {
@@ -666,16 +669,32 @@ export default class PanophotoPlayer {
     this.dimScene();
 
     let hideStartedBrandTimer;
+    let rotationCheckTimer;
     const hideStartedBrand = () => {
       if (this.play.mode !== PLAY_MODE.AUTO) {
         this.brandContext.instance.hide();
         this.brightenScene();
         this.container.removeEventListener(EVENTS.CLICK_START, hideStartedBrand);
+        clearInterval(rotationCheckTimer);
         clearTimeout(hideStartedBrandTimer);
       }
     };
     // Hide the started brand after first click
     this.container.addEventListener(EVENTS.CLICK_START, hideStartedBrand);
+    // Hide the started brand if the device is rotated obviously
+    rotationCheckTimer = setInterval(() => {
+      const rotationDelta = this.getRotationDelta();
+      const appliedRotationDelta = {
+        x: rotationDelta.x * this.rotationDeltaMagicNumber,
+        y: rotationDelta.y * this.rotationDeltaMagicNumber,
+      };
+      const rotationMomement =
+        Math.abs(appliedRotationDelta.x) +
+        Math.abs(appliedRotationDelta.y);
+      if (rotationMomement > HIDE_STARTED_BRAND_ROTATION_THRESHOLD) {
+        hideStartedBrand();
+      }
+    }, 20);
     // Automatically hide the started brand after a while
     if (this.brandContext.hideStartedBrandAuto) {
       hideStartedBrandTimer = setTimeout(
