@@ -7,7 +7,10 @@ import now from 'lodash/now';
 import isNumber from 'lodash/isNumber';
 import raf from 'raf';
 
-import { PARAMS_DEFAULT } from 'constants/panophoto';
+import {
+  PARAMS_DEFAULT,
+  SCENE_BRIGHTNESS_MODE,
+} from 'constants/panophoto';
 import { PLAY_MODE } from 'constants/common';
 import { isMobile, isIOS, isIframe } from 'lib/devices';
 import { getPosition } from 'lib/events/click';
@@ -18,6 +21,10 @@ import GyroNorm from 'external/gyronorm';
 const SPHERE_RADIUS = 1000;
 const LAT_MAX = 85;
 const LAT_MIN = -85;
+
+const BRIGHTENTED_OPACITY = 1;
+const DIMMED_OPACITY = 0.7;
+const BRIGHTNESS_CHANGE_STEP = 0.005;
 
 const SWIPE = {
   BUFFER_SIZE: isMobile() ? 10 : 20,
@@ -36,6 +43,8 @@ const AUTO_PLAY = {
   AUTO_TO_MANUAL_MOVEMENT_THRESHOLD: isMobile() ? 1 : 0.2,
   LNG_DELTA: 0.04,
 };
+
+const HIDE_STARTED_BRAND_ROTATION_THRESHOLD = 0.1;
 
 export default class PanophotoPlayer {
   constructor(params) {
@@ -152,6 +161,10 @@ export default class PanophotoPlayer {
       lng: this.initialLng,
       lat: this.initialLat,
     };
+    // Materials
+    this.materials = [];
+    // The brightness mode of scene
+    this.sceneBrightnessMode = SCENE_BRIGHTNESS_MODE.DIM;
     // Position and delta of swipe
     this.swipe = {
       lastPos: null,
@@ -184,8 +197,14 @@ export default class PanophotoPlayer {
     this.clearUpdateTimer();
     // Dimension includes width and height of container, window orientation (portrait or landscape)
     this.updateDimension();
-    // Hide the brand
-    this.brand.hide();
+    // Reset the brand context
+    this.brandContext = {
+      instance: this.brand,
+      showBrandAtStart: PARAMS_DEFAULT.SHOW_BRAND_AT_START,
+      hideStartedBrandAuto: PARAMS_DEFAULT.HIDE_STARTED_BRAND_AUTO,
+      hideStartedBrandAutoDuration: PARAMS_DEFAULT.HIDE_STARTED_BRAND_AUTO_DURATION,
+    };
+    this.brandContext.instance.hide();
     // Hide the tip
     this.tip.hide();
   }
@@ -199,12 +218,10 @@ export default class PanophotoPlayer {
       if (this.isAutoplayEnabled) {
         this.autoPlay.startWaitTime = now();
       }
+      if (this.brandContext.showBrandAtStart) {
+        this.showStartedBrand();
+      }
       this.animationTimer = raf(this.onAnimationFrame);
-      this.brand.show();
-      setTimeout(() => {
-        this.brand.hide();
-        setTimeout(() => this.brand.remove(), 500);
-      }, 4000);
     });
   }
 
@@ -350,7 +367,7 @@ export default class PanophotoPlayer {
 
     // TODO: Use CanvasRenderer for browser without WebGL support
     this.renderer = new THREE.WebGLRenderer(webGLRendererParams);
-    this.renderer.setClearColor(0x000000, 0);
+    this.renderer.setClearColor(0x000000, 1);
     this.renderer.autoClear = false;
     // this.renderer.autoClearColor = false;
     this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -405,10 +422,11 @@ export default class PanophotoPlayer {
       map: texture,
       overdraw: true,
       transparent: true,
-      opacity: 1,
+      opacity: DIMMED_OPACITY,
     });
     const mesh = new THREE.Mesh(geometry, material);
 
+    this.materials.push(material);
     this.scene.add(mesh);
   }
 
@@ -457,6 +475,8 @@ export default class PanophotoPlayer {
             this.autoPlay.startWaitTime = now();
             this.autoPlay.accumulativeMovement = 0;
             this.tip.show();
+            this.brandContext.instance.show();
+            this.dimScene();
           }
         }
       }
@@ -471,6 +491,8 @@ export default class PanophotoPlayer {
           this.autoPlay.startWaitTime = now();
           this.autoPlay.accumulativeMovement = 0;
           this.tip.hide();
+          this.brandContext.instance.hide();
+          this.brightenScene();
         } else {
           if ((now() - this.autoPlay.startWaitTime) >= PARAMS_DEFAULT.AUTO_TO_MANUAL_TIME) {
             // Accumulative momement does not exceed the limit,
@@ -495,6 +517,9 @@ export default class PanophotoPlayer {
       Math.sin(phi) * Math.sin(theta) // z
     );
     this.camera.instance.lookAt(target);
+
+    // Update brightness of scene
+    this.updateSceneBrightness();
 
     // Re-render
     this.renderer.clear();
@@ -635,6 +660,94 @@ export default class PanophotoPlayer {
     if (this.renderer) {
       // Update renderer size
       this.renderer.setSize(this.dimension.width, this.dimension.height);
+    }
+  }
+
+  // Show brand at start
+  showStartedBrand() {
+    this.brandContext.instance.show();
+    this.dimScene();
+
+    let hideStartedBrandTimer;
+    let rotationCheckTimer;
+    const hideStartedBrand = () => {
+      if (this.play.mode !== PLAY_MODE.AUTO) {
+        this.brandContext.instance.hide();
+        this.brightenScene();
+        this.container.removeEventListener(EVENTS.CLICK_START, hideStartedBrand);
+        clearInterval(rotationCheckTimer);
+        clearTimeout(hideStartedBrandTimer);
+      }
+    };
+    // Hide the started brand after first click
+    this.container.addEventListener(EVENTS.CLICK_START, hideStartedBrand);
+    // Hide the started brand if the device is rotated obviously
+    rotationCheckTimer = setInterval(() => {
+      const rotationDelta = this.getRotationDelta();
+      const appliedRotationDelta = {
+        x: rotationDelta.x * this.rotationDeltaMagicNumber,
+        y: rotationDelta.y * this.rotationDeltaMagicNumber,
+      };
+      const rotationMomement =
+        Math.abs(appliedRotationDelta.x) +
+        Math.abs(appliedRotationDelta.y);
+      if (rotationMomement > HIDE_STARTED_BRAND_ROTATION_THRESHOLD) {
+        hideStartedBrand();
+      }
+    }, 20);
+    // Automatically hide the started brand after a while
+    if (this.brandContext.hideStartedBrandAuto) {
+      hideStartedBrandTimer = setTimeout(
+        hideStartedBrand,
+        this.brandContext.hideStartedBrandAutoDuration
+      );
+    }
+  }
+
+  // Brighten the scene
+  brightenScene() {
+    if (this.sceneBrightnessMode === SCENE_BRIGHTNESS_MODE.DIM) {
+      this.sceneBrightnessMode = SCENE_BRIGHTNESS_MODE.DIM_TO_BRIGTH;
+    }
+  }
+
+  // Dim the scene
+  dimScene() {
+    if (this.sceneBrightnessMode === SCENE_BRIGHTNESS_MODE.BRIGHT) {
+      this.sceneBrightnessMode = SCENE_BRIGHTNESS_MODE.BRIGHT_TO_DIM;
+    }
+  }
+
+  // Update the brightness of scene
+  updateSceneBrightness() {
+    if (this.sceneBrightnessMode === SCENE_BRIGHTNESS_MODE.DIM_TO_BRIGTH) {
+      let needMoreBright = false;
+      this.materials.forEach((material) => {
+        if (material.opacity < BRIGHTENTED_OPACITY) {
+          needMoreBright = true;
+          material.opacity = Math.min(
+            material.opacity + BRIGHTNESS_CHANGE_STEP,
+            BRIGHTENTED_OPACITY
+          );
+        }
+      });
+      if (!needMoreBright) {
+        this.sceneBrightnessMode = SCENE_BRIGHTNESS_MODE.BRIGHT;
+      }
+    } else if (this.sceneBrightnessMode === SCENE_BRIGHTNESS_MODE.BRIGHT_TO_DIM) {
+      let needMoreDim = false;
+      this.materials.forEach((material) => {
+        if (material.opacity > DIMMED_OPACITY) {
+          needMoreDim = true;
+          material.opacity = Math.max(
+            material.opacity - BRIGHTNESS_CHANGE_STEP,
+            DIMMED_OPACITY
+          );
+        }
+      });
+      if (!needMoreDim) {
+        this.sceneBrightnessMode = SCENE_BRIGHTNESS_MODE.DIM;
+      }
     }
   }
 
