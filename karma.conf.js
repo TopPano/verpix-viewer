@@ -8,6 +8,8 @@ const CUTSOM_BROWSERS = [{
   userAgent: 'Mozilla/5.0 (Linux; Android 6.0.1; ASUS_Z00UD Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Mobile Safari/537.36',
 }];
 
+const useIframe = process.argv.includes('--iframe');
+
 module.exports = function(config) {
   const browsers = ['PhantomJS'];
   const customLaunchers = {};
@@ -41,6 +43,7 @@ module.exports = function(config) {
       'sinon',
     ],
     client: {
+      useIframe,
       mocha: {},
     },
     singleRun: true,

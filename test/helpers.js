@@ -16,9 +16,14 @@ export function isMobile() {
   return isIOS() || isAndroid();
 }
 
+export function isIframe() {
+  return window.self !== window.top;
+}
+
 export default {
   getOS,
   isIOS,
   isAndroid,
   isMobile,
+  isIframe,
 };
