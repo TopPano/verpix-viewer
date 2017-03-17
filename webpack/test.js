@@ -24,6 +24,13 @@ const config = {
         ],
         loader: 'isparta-instrumenter-loader',
       },
+      {
+        test: /\.js?$/,
+        include: [
+          path.resolve(__dirname, '../test'),
+        ],
+        loader: 'eslint-loader',
+      },
     ],
     loaders: [
       {

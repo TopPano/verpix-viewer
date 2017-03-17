@@ -105,8 +105,9 @@
       "browser": 1
     },
     "globals": {
-      "Image": 1,
-      "ga": 1
+      "Image": true,
+      "ga": true,
+      "expect": true
     }
   },
   "stylelint": {
