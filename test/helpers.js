@@ -2,8 +2,9 @@
 
 import MobileDetect from 'mobile-detect';
 
-const IOS = 'ios';
-const ANDROID = 'android';
+export const IOS = 'ios';
+export const ANDROID = 'android';
+
 const USER_AGENTS = {
   [IOS]: 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_2_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13D15 Safari/601.1',
   [ANDROID]: 'Mozilla/5.0 (Linux; Android 6.0.1; ASUS_Z00UD Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Mobile Safari/537.36',
@@ -49,12 +50,3 @@ export function mockMobile(os = IOS) {
     },
   };
 }
-
-export default {
-  getOS,
-  inIOS,
-  inAndroid,
-  inMobile,
-  inIframe,
-  mockMobile,
-};
