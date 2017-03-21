@@ -107,7 +107,8 @@
     "globals": {
       "Image": true,
       "ga": true,
-      "expect": true
+      "expect": true,
+      "sinon": true
     }
   },
   "stylelint": {
