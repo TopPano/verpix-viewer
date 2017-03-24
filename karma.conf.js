@@ -14,18 +14,27 @@ module.exports = function(config) {
     browsers,
     customLaunchers,
     files: [
-      'test/runner.js'
+      'test/runner.js',
+      // PhantomJS lacks of Promise, use bluebird as polyfill
+      'node_modules/bluebird/js/browser/bluebird.js',
+      // PhantomJS doesn't support Dom 4, use the polyfill
+      'node_modules/dom4/build/dom4.js',
     ],
     port: 8080,
     captureTimeout: 60000,
     frameworks: [
       'mocha',
+      'chai-dom',
       'chai',
+      'sinon-chai',
       'sinon',
     ],
     client: {
       useIframe,
       mocha: {},
+      chai: {
+        includeStack: true,
+      },
     },
     singleRun: true,
     reporters: [
