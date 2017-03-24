@@ -1,6 +1,15 @@
 /* eslint-disable max-len */
 
 import MobileDetect from 'mobile-detect';
+import forEach from 'lodash/forEach';
+import isString from 'lodash/isString';
+
+export const VENDOR_PREFIX = [
+  'webkit',
+  'Moz',
+  'ms',
+  'O',
+];
 
 export const IOS = 'ios';
 export const ANDROID = 'android';
@@ -49,4 +58,29 @@ export function mockMobile(os = IOS) {
       setUserAgent(originalUserAgent);
     },
   };
+}
+
+export function testError(err, expectedMsg) {
+  expect(err).to.be.an('error');
+  expect(err.message).to.equal(expectedMsg);
+}
+
+export function testElementStyles(el, expectedStyles) {
+  forEach(expectedStyles, (expected, prop) => {
+    if (isString(expected)) {
+      expect(el.style[prop]).to.equal(expected);
+    } else {
+      expect(el.style[prop]).to.equal(expected.value);
+      if (expected.withPrefix) {
+        // Also test property with prefixes
+        VENDOR_PREFIX.forEach((prefix) => {
+          // Concatenate the propperty with prefix
+          // Example:
+          // prefix = Moz, prop = pointerEvents => prefixProp = MozPointerEvents
+          const prefixProp = `${prefix}${prop.charAt(0).toUpperCase()}${prop.slice(1)}`;
+          expect(el.style[prefixProp]).to.equal(expected.value);
+        });
+      }
+    }
+  });
 }

@@ -19,7 +19,7 @@ export default function createTip({ onTop = false }) {
   tip.style.position = 'absolute';
   tip.style.left = '50%';
   tip.style.bottom = '12px';
-  applyStyle(tip, 'pointer-events', 'none');
+  applyStyle(tip, 'pointerEvents', 'none');
   applyStyle(tip, 'transform', 'translateX(-50%)');
   if (onTop) {
     tip.style.zIndex = '99999999';
@@ -28,14 +28,14 @@ export default function createTip({ onTop = false }) {
   tip.isShown = false;
   tip.show = () => {
     if (!tip.isShown) {
-      applyStyle(tip, 'transition', 'opacity 2.5s 3s linear');
+      applyStyle(tip, 'transition', 'opacity 2.5s linear 3s');
       tip.style.opacity = '1';
       tip.isShown = true;
     }
   };
   tip.hide = () => {
     if (tip.isShown) {
-      applyStyle(tip, 'transition', 'opacity .5s linear');
+      applyStyle(tip, 'transition', 'opacity 0.5s linear');
       tip.style.opacity = '0';
       tip.isShown = false;
     }
