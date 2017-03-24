@@ -165,8 +165,11 @@ describe('createTip()', () => {
 
       // Mockup mobile device
       const mockMobileDevice = mockMobile();
-      testTipShape(createTip({}), `${STATIC_ROOT}/assets/tip-tilt.svg`, '80', '60');
-      mockMobileDevice.restore();
+      try {
+        testTipShape(createTip({}), `${STATIC_ROOT}/assets/tip-tilt.svg`, '80', '60');
+      } finally {
+        mockMobileDevice.restore();
+      }
     } else {
       if (inMobile()) {
         testTipShape(createTip({}), `${STATIC_ROOT}/assets/tip-tilt.svg`, '80', '60');

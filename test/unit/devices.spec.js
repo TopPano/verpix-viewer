@@ -28,8 +28,11 @@ describe('isMobile()', () => {
 
       // Mockup mobile device
       const mockMobileDevice = mockMobile();
-      expect(isMobile()).to.be.true;
-      mockMobileDevice.restore();
+      try {
+        expect(isMobile()).to.be.true;
+      } finally {
+        mockMobileDevice.restore();
+      }
     } else {
       if (inMobile()) {
         expect(isMobile()).to.be.true;
@@ -47,13 +50,19 @@ describe('isIOS()', () => {
 
       // Mockup Android
       const mockAndroid = mockMobile(ANDROID);
-      expect(isIOS()).to.be.false;
-      mockAndroid.restore();
+      try {
+        expect(isIOS()).to.be.false;
+      } finally {
+        mockAndroid.restore();
+      }
 
       // Mockup iOS
       const mockIOS = mockMobile(IOS);
-      expect(isIOS()).to.be.true;
-      mockIOS.restore();
+      try {
+        expect(isIOS()).to.be.true;
+      } finally {
+        mockIOS.restore();
+      }
     } else {
       if (inIOS()) {
         expect(isIOS()).to.be.true;
