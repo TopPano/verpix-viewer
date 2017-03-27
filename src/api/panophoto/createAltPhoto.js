@@ -10,9 +10,9 @@ export default function createAltPhoto(url) {
   altPhoto.style.height = '100%';
   altPhoto.style.position = 'absolute';
   altPhoto.style.left = '50%';
-  altPhoto.style.top = '0';
+  altPhoto.style.top = '0px';
   altPhoto.style.display = 'none';
-  applyStyle(altPhoto, 'transform', 'translate(-50%, 0)');
+  applyStyle(altPhoto, 'transform', 'translate(-50%, 0px)');
   // States and methods for altPhoto
   altPhoto.isShown = false;
   altPhoto.show = () => {

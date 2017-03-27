@@ -16,7 +16,7 @@ import {
   execute,
 } from 'lib/utils';
 import createContainer from './createContainer';
-import constructPhotoUrls from './constructPhotUrls';
+import constructPhotoUrls from './constructPhotoUrls';
 import PanophotoPlayer from './PanophotoPlayer';
 import optimizeMobile from '../common/optimizeMobile';
 import getMedia from '../common/getMedia';

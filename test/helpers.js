@@ -3,16 +3,21 @@
 import MobileDetect from 'mobile-detect';
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
+import config from 'config';
 
+// List of vendor prefix
 export const VENDOR_PREFIX = [
   'webkit',
   'Moz',
   'ms',
   'O',
 ];
-
+// The targets of mocked-up mobile device
 export const IOS = 'ios';
 export const ANDROID = 'android';
+// Constants from configuration
+export const FETCH_ROOT = config.fetchRoot;
+export const STATIC_ROOT = config.staticRoot;
 
 const USER_AGENTS = {
   [IOS]: 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_2_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13D15 Safari/601.1',
