@@ -1,4 +1,5 @@
 import getMedia from 'api/common/getMedia';
+import optimizeMobile from 'api/common/optimizeMobile';
 import createTip from 'api/common/createTip';
 import createLogo from 'api/common/createLogo';
 import config from 'config';
@@ -92,13 +93,6 @@ describe('getMedia()', () => {
 });
 
 function testOptimizedMobile() {
-  // FIXME:
-  // If we use "import" to include optimizmeMobile, it will also include event constants,
-  // which uses non-mobile version because import is executed before mocking-up mobile device.
-  // The only choice is to use require in this function.
-  // Please fix the issue in the future.
-  // eslint-disable-next-line global-require
-  const optimizeMobile = require('api/common/optimizeMobile').default;
   const el = document.createElement('DIV');
 
   // Spy "addEventListener" method of the element
