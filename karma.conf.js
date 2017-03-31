@@ -15,20 +15,6 @@ module.exports = function(config) {
       version: '49.0',
       platform: 'Windows 10',
     },
-    // Firefox on Windows
-    'SL_Chrome': {
-      base: 'SauceLabs',
-      browserName: 'firefox',
-      version: '40.0',
-      platform: 'Windows 10',
-    },
-    // IE on Windows
-    'SL_InternetExplorer': {
-      base: 'SauceLabs',
-      browserName: 'internet explorer',
-      version: '11.0',
-      platform: 'Windows 10',
-    },
   };
   const browsers =
     !completed ? ['PhantomJS'] : Object.keys(customLaunchers);
