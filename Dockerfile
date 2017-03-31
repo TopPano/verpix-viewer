@@ -51,4 +51,4 @@ RUN echo "aws_secret_access_key=$AWS_SECRET" >> ~/.aws/credentials
 RUN npm run build
 
 # cp to S3 bucket for storing dev version SDK
-RUN aws s3 cp public/dist/sdk.js "s3://$BKT_NAME/"
+RUN aws s3 cp --acl public-read public/dist/sdk.js "s3://$BKT_NAME/"
