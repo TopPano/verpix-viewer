@@ -6,7 +6,7 @@ const webpackCfg = require('./webpack.config');
 const useIframe = process.argv.includes('--iframe');
 
 module.exports = function(config) {
-  const browsers = ['PhantomJS'];
+  const browsers = ['SlimerJS'];
   const customLaunchers = {};
 
   config.set({
@@ -15,9 +15,9 @@ module.exports = function(config) {
     customLaunchers,
     files: [
       'test/runner.js',
-      // PhantomJS lacks of Promise, use bluebird as polyfill
+      // Use bluebird as Promise polyfill
       'node_modules/bluebird/js/browser/bluebird.js',
-      // PhantomJS doesn't support Dom 4, use the polyfill
+      // Dom 4 polyfill
       'node_modules/dom4/build/dom4.js',
     ],
     port: 8080,
