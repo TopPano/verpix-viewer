@@ -21,10 +21,10 @@ RUN npm install -g pm2
 ADD . /home/verpix/verpix-viewer
 RUN chown -R verpix:verpix /home/verpix/verpix-viewer
 
-# npm install
-USER verpix
-WORKDIR /home/verpix/verpix-viewer
-RUN npm install
+## npm install
+#USER verpix
+#WORKDIR /home/verpix/verpix-viewer
+#RUN npm install
 
 ## set S3 for storing SDK
 #ARG BKT_NAME
