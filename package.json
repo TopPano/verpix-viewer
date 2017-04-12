@@ -9,6 +9,7 @@
   "dependencies": {
     "babel-polyfill": "6.9.1",
     "bluebird": "https://registry.npmjs.org/bluebird/-/bluebird-3.4.6.tgz",
+    "change-case": "3.0.1",
     "classnames": "2.2.5",
     "fastclick": "1.0.6",
     "history": "3.0.0",

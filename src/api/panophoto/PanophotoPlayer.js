@@ -69,9 +69,9 @@ export default class PanophotoPlayer {
   }
 
   // Entry function for starting
-  start = () => {
+  start = (callback) => {
     this.resetMemberVars();
-    this.startPlay();
+    this.startPlay(callback);
   }
 
   // Entry function for stopping
@@ -80,7 +80,7 @@ export default class PanophotoPlayer {
   }
 
   // Entry function for getting current coordinates (longitude and latitude)
-  getCurrentCoordinates = () => ({
+  getCurrentCoordinates = () => (!this.camera ? null : {
     lng: this.camera.lng,
     lat: this.camera.lat,
   })
@@ -210,7 +210,7 @@ export default class PanophotoPlayer {
   }
 
   // Start playing
-  startPlay() {
+  startPlay(callback) {
     this.setup();
     this.buildScene(this.photosSrcUrl, () => {
       this.addEventHandlers();
@@ -222,6 +222,9 @@ export default class PanophotoPlayer {
         this.showStartedBrand();
       }
       this.animationTimer = raf(this.onAnimationFrame);
+      execute(callback);
+    }, () => {
+      execute(callback);
     });
   }
 
@@ -377,7 +380,7 @@ export default class PanophotoPlayer {
   }
 
   // Generate textrues from images.
-  buildScene(imgs, callback) {
+  buildScene(imgs, onSuccess, onFailure) {
     const loader = new THREE.TextureLoader();
     let count = 0;
 
@@ -389,12 +392,13 @@ export default class PanophotoPlayer {
         this.addMesh(texture, index, imgs.length);
         count++;
         if (count === imgs.length) {
-          execute(callback);
+          execute(onSuccess);
         }
       }, () => {
         // TODO: function called when download progresses
       }, () => {
         this.altPhoto.show();
+        execute(onFailure);
       });
     });
   }

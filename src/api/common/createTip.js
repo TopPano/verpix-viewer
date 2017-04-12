@@ -35,7 +35,7 @@ export default function createTip({ onTop = false }) {
   };
   tip.hide = () => {
     if (tip.isShown) {
-      applyStyle(tip, 'transition', 'opacity 0.5s linear');
+      applyStyle(tip, 'transition', 'opacity 0.5s linear 0s');
       tip.style.opacity = '0';
       tip.isShown = false;
     }

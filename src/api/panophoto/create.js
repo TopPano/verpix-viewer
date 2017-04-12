@@ -158,6 +158,9 @@ export default function create(source, params, callback) {
     setDataAttribute(root, 'height', params.height);
   }
 
+  // Check the types of parameters
+  altPhotoUrl = isString(altPhotoUrl) ? altPhotoUrl : '';
+
   if (createMethod === CREATE_METHOD.DOM || createMethod === CREATE_METHOD.ID) {
     getMedia(mediaId).then((res) => {
       const { gaId } = res.owner;
@@ -200,6 +203,7 @@ export default function create(source, params, callback) {
     createInstance({
       root,
       photosSrcUrl,
+      altPhotoUrl,
       width,
       height,
       initialLat,

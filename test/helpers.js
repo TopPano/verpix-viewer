@@ -3,6 +3,9 @@
 import MobileDetect from 'mobile-detect';
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
+import isFunction from 'lodash/isFunction';
+import raf from 'raf';
+
 import config from 'config';
 
 // List of vendor prefix
@@ -15,6 +18,23 @@ export const VENDOR_PREFIX = [
 // The targets of mocked-up mobile device
 export const IOS = 'ios';
 export const ANDROID = 'android';
+// Events
+export const WHEEL = [
+  'mousewheel',
+  'DOMMouseScroll',
+];
+export const CLICK_DESKTOP = {
+  START: 'mousedown',
+  MOVE: 'mousemove',
+  END: 'mouseup',
+  CANCEL: 'mouseout',
+};
+export const CLICK_MOBILE = {
+  START: 'touchstart',
+  MOVE: 'touchmove',
+  END: 'touchend',
+  CANCEL: 'touchcancel',
+};
 // Constants from configuration
 export const FETCH_ROOT = config.fetchRoot;
 export const STATIC_ROOT = config.staticRoot;
@@ -45,10 +65,6 @@ export function inIframe() {
 }
 
 function setUserAgent(userAgent) {
-  const originalNavigator = window.navigator;
-
-  window.navigator = {};
-  window.navigator.__proto__ = originalNavigator; // eslint-disable-line no-proto
   window.navigator.__defineGetter__('userAgent', () => userAgent); // eslint-disable-line no-underscore-dangle
 }
 
@@ -63,6 +79,100 @@ export function mockMobile(os = IOS) {
       setUserAgent(originalUserAgent);
     },
   };
+}
+
+// Execute a callback it it is a function
+export function execute(callback, ...args) {
+  if (isFunction(callback)) {
+    callback(...args);
+  }
+}
+
+// Set response of a Sinon FakeServer
+export function setResponse(server, {
+  method = 'GET',
+  url,
+  status = 200,
+  header = { 'Content-Type': 'application/json' },
+  body = JSON.stringify({}),
+}) {
+  server.respondWith(method, url, [
+    status,
+    header,
+    body,
+  ]);
+}
+
+// Create a DOM event
+export function createEvent(category, type, data) {
+  switch (category) {
+    case 'mouse':
+      return new MouseEvent(type, data);
+    default:
+      return new CustomEvent(type, data);
+  }
+}
+
+// Simulate swipe on a DOM element
+export function swipeOnElement(el, {
+  fromX = 0,
+  fromY = 0,
+  toX = 0,
+  toY = 0,
+  steps = 10,
+}, callback) {
+  const CLICK = inMobile() ? CLICK_MOBILE : CLICK_DESKTOP;
+  const eventCategory = inMobile() ? 'touch' : 'mouse';
+  const eventData = {
+    button: 0,
+  };
+  const deltaX = (toX - fromX) / steps;
+  const deltaY = (toY - fromY) / steps;
+
+  // Create swipe events
+  const startEvent = createEvent(eventCategory, CLICK.START, eventData);
+  const moveEvent = createEvent(eventCategory, CLICK.MOVE, eventData);
+  const endEvent = createEvent(eventCategory, CLICK.END);
+
+  // Dispatch the starting event
+  el.dispatchEvent(startEvent);
+
+  // Loop to dispatch the moving event many times
+  let counter = 0;
+  raf(function move() {
+    // Set positions of moving events
+    const newX = fromX + (deltaX * counter);
+    const newY = fromY + (deltaY * counter);
+    if (inMobile()) {
+      moveEvent.touches = [];
+      moveEvent.touches.push({
+        pageX: newX,
+        pageY: newY,
+      });
+    } else {
+      moveEvent.offsetX = newX;
+      moveEvent.offsetY = newY;
+    }
+
+    // Dispatch the moving event
+    el.dispatchEvent(moveEvent);
+
+    // Increase the counter
+    counter++;
+
+    // Check the counter and decide keep going or ending the swipe
+    if (counter < steps) {
+      raf(move);
+    } else {
+      // Dispatch the ending event
+      el.dispatchEvent(endEvent);
+
+      // Invoke the callback function
+      if (isFunction(callback)) {
+        callback();
+      }
+    }
+  });
 }
 
 export function testError(err, expectedMsg) {
