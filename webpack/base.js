@@ -39,6 +39,7 @@ const config = {
     alias: {
       constants: 'src/constants',
       lib: 'src/lib',
+      api: 'src/api',
       external: 'external',
       config: 'config',
     },

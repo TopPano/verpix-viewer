@@ -16,7 +16,7 @@ import {
   execute,
 } from 'lib/utils';
 import createContainer from './createContainer';
-import constructPhotoUrls from './constructPhotUrls';
+import constructPhotoUrls from './constructPhotoUrls';
 import PanophotoPlayer from './PanophotoPlayer';
 import optimizeMobile from '../common/optimizeMobile';
 import getMedia from '../common/getMedia';
@@ -158,6 +158,9 @@ export default function create(source, params, callback) {
     setDataAttribute(root, 'height', params.height);
   }
 
+  // Check the types of parameters
+  altPhotoUrl = isString(altPhotoUrl) ? altPhotoUrl : '';
+
   if (createMethod === CREATE_METHOD.DOM || createMethod === CREATE_METHOD.ID) {
     getMedia(mediaId).then((res) => {
       const { gaId } = res.owner;
@@ -200,6 +203,7 @@ export default function create(source, params, callback) {
     createInstance({
       root,
       photosSrcUrl,
+      altPhotoUrl,
       width,
       height,
       initialLat,
