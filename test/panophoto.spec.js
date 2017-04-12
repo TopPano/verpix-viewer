@@ -85,7 +85,7 @@ const testCreateOnDesktop = (inputs, testFn, onEnd) => (
 );
 
 const testCreateOnMobile = (inputs, testFn, onEnd) => {
-  if (process.env.PHANTOM) {
+  if (process.env.SLIMER) {
     // Mockup mobile device
     const mockMobileDevice = mockMobile();
     return testCreate(inputs, testFn, () => {

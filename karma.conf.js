@@ -50,7 +50,7 @@ module.exports = function(config) {
       plugins: [
         new webpack.DefinePlugin({
           "process.env": {
-            PHANTOM: JSON.stringify(true),
+            SLIMER: JSON.stringify(true),
           }
         }),
       ],
