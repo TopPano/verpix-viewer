@@ -176,9 +176,9 @@ You will get an DOM element that can show an alternative photo and methods to ma
 
 ### <a name="panophoto-params">Parameters
 
-Parameters can be passed via data attributes for html and *type 0*, and via *params* for *type 1* and *type 2*. FOr data attributes, append the parameter name to `data-`, as in `data-width="500"`.
+Parameters can be passed via data attributes for html and *type 0*, and via *params* for *type 1* and *type 2*. For data attributes, append the parameter name to `data-`, as in `data-width="500"`.
 
-Note that when specifying these parameters as data-attributes, you should convert *camelCased* names into *dash-separated lower-case* names (e.g. `initialLng` would be `data-initial-lng="35"`, and`disableCDN` would be `data-disable-cdn="true"`).
+Note that when specifying these parameters as data-attributes, you should convert *camelCased* names into *dash-separated lower-case* names (e.g. `initialLng` would be `data-initial-lng="35"`, and `disableCDN` would be `data-disable-cdn="true"`).
 
 <table class="table table-bordered table-striped">
 	<thead>
