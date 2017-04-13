@@ -55,7 +55,7 @@ verpix.createPanophoto(el, {}, (err, instance) => {
 ### <a name="api-panophoto"></a>panophoto
 You can run panophoto via both html and javascript.
 #### Via html
-To run panophoto via html, you just need html elements whose class is *verpix-panophoto*. To parameterize, you should set the parameter value to html attribute `data-*`, such as `data-width="500"`. [Parameters](#api-panophoto) section shows all available parameters.
+To run panophoto via html, you just need html elements whose class is *verpix-panophoto*. To parameterize, you should set the parameter value to html attribute `data-*`, such as `data-width="500"`. [Parameters](#api-panophoto-params) section shows all available parameters.
 #### Via javascript
 To run panophoto via javascript, call `verpix.createPanophoto`.
 ##### verpix.createPanophoto(source, params, callback(err, instance))
@@ -63,7 +63,7 @@ To run panophoto via javascript, call `verpix.createPanophoto`.
   - *type 0*: a *DOM element* that you want to show panophoto
   - *type 1*: a *string* that is a media ID you have posted in [Verpix](https://www.verpix.me)
   - *type 2*: an *array of string* that is each string is an URL of image
-- **_params_**: An *object* that fills parameters, only used for *type 1* and *type 2*. *Type 0* is parameterized by setting attribute of `data-*`. [Parameters](#api-panophoto) section shows all available parameters.
+- **_params_**: An *object* that fills parameters, only used for *type 1* and *type 2*. *Type 0* is parameterized by setting attribute of `data-*`. [Parameters](#api-panophoto-params) section shows all available parameters.
 - **_callback(err, instance)_**: An *function* that will be executed after creating.
   - *err*: An *Error object* if some errors occur while creating, and *null* if no error.
   - *instance*: An *object* that contains the panophoto DOM element and methods to manipulate it. The return value of *instance* depends on the value of *err*.
@@ -151,9 +151,87 @@ You will get an DOM element that can show an alternative photo and methods to ma
 </table>
 
 #### <a name="api-panophoto-params">Parameters
-```javascript
-// TODO: Parameters for livephoto
-```
+Parameters can be passed via data attributes for html and *type 0*, and via *params* for *type 1* and *type 2*. FOr data attributes, append the parameter name to `data-`, as in `data-width="500"`.
+
+Note that when specifying these parameters as data-attributes, you should convert *camelCased* names into *dash-separated lower-case* names (e.g. `initialLng` would be `data-initial-lng="35"`, and`disableCDN` would be `data-disable-cdn="true"`).
+
+<table class="table table-bordered table-striped">
+	<thead>
+		<tr>
+			<th style="width: 100px;">Name</th>
+			<th style="width: 100px;">type</th>
+			<th style="width: 50px;">default</th>
+			<th>description</th>
+		</tr>
+	</thead>
+  <tbody>
+		<tr>
+			<td>id</td>
+			<td>string</td>
+			<td>required</td>
+			<td>The media id you want to specify. Only used in html and type 0.</td>
+		</tr>
+		<tr>
+			<td>width</td>
+			<td>number</td>
+			<td>required</td>
+			<td rowspan="2">The visible size of panophoto. The size effects the quality of panophoto to load For html, type 0 and 1. If width and height are both not larger than 300, lowest quality panophoto are loaded; otherwise, highest ones are loaded.</td>
+		</tr>
+    <tr>
+			<td>height</td>
+			<td>number</td>
+			<td>required</td>
+		</tr>
+    <tr>
+			<td>initialLng</td>
+			<td>number</td>
+			<td>0/auto</td>
+			<td rowspan="2">The initial coordinates (longitude and latitude) of panophoto. For type 2, the default values are (0, 0). For other cases, the default values are determined by the coordinates when you posting on Verpix.</td>
+		</tr>
+    <tr>
+			<td>initialLat</td>
+			<td>number</td>
+			<td>0/auto</td>
+		</tr>
+    <tr>
+			<td>autoplay</td>
+			<td>boolean</td>
+			<td>true</td>
+			<td>Autoplay after idle duration.</td>
+		</tr>
+		<tr>
+			<td>idleDuration</td>
+			<td>number</td>
+			<td>10</td>
+			<td>Determine how long the idle duration to autoplay. This parameters is taken only when autoplay is true.</td>
+		</tr>
+    <tr>
+			<td>altPhotoUrl</td>
+			<td>string</td>
+			<td>''</td>
+			<td>The URL of alternative image when error occurs while creating panophoto.</td>
+		</tr>
+		<tr>
+			<td>tipOnTop</td>
+			<td>boolean</td>
+			<td>false</td>
+			<td>Always show the tip on top even some other html elements are covered on it.</td>
+		</tr>
+		<tr>
+			<td>disableCDN</td>
+			<td>boolean</td>
+			<td>false</td>
+			<td>Load panophoto from CDN or not. The parameter is used only in html, type 0 and 1.</td>
+		</tr>
+		<tr>
+			<td>disableGA</td>
+			<td>boolean</td>
+			<td>false</td>
+			<td>Send a Google Analytics event or not.</td>
+		</tr>
+  </tbody>
+</table>
+
 ### <a name="api-livephoto"></a>livephoto
 ```javascript
 // TODO: API for livephoto
