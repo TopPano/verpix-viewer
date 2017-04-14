@@ -120,7 +120,7 @@ You will get an DOM element that can display panophoto and methods to manipulate
 			<td>Get current coordinates of panophoto, lng is longitude and lat is latitude.</td>
 		</tr>
     <tr>
-			<td>getCurrentCoordinates({ quality: number, ratio: number })</td>
+			<td>getCurrentSnapshot({ quality: number, ratio: number })</td>
       <td>string</td>
 			<td>Snapshot of current view. The snapshot is a base64 string encoded in JPEG format. The quality option should be in range from 0 to 1, and its default value is 1. The ratio option specifies the aspect ratio of snapshot. If ratio is no specified, the whole current view will be captured.</td>
 		</tr>
