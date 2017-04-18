@@ -384,6 +384,14 @@ describe('panophoto/create()', () => {
     );
   });
 
+  /**
+   * The Dom tree under root should be:
+   * root --> wrapper --> container ----> altPhoto
+   *                                 |--> brand
+   *                                 |--> tip
+   *                                 |--> logo
+   *                                 |--> canvas
+   **/
   describe('instance.root', () => {
     it('should equal to the given dom element for type 0', () =>
       testCreate(inputs.slice(0, 1), (err, instance, done) => {
@@ -416,7 +424,7 @@ describe('panophoto/create()', () => {
         const event = createEvent('touch', CLICK_MOBILE.MOVE);
 
         // Spy "preventDefault" method of the event
-        sinon.stub(event, 'preventDefault');
+        sinon.spy(event, 'preventDefault');
         // Dispatch the event to the root
         getRootEl(instance).dispatchEvent(event);
         // Test "preventDefault" is called correctly
@@ -446,7 +454,7 @@ describe('panophoto/create()', () => {
     it('should contain a DIV grandchild "container" with proper styles', () =>
       testCreate(inputs, (err, instance, done) => {
         // Test container is a DIV element
-        expect(getContainerEl(instance)).to.match('div');
+        expect(getContainerEl(instance)).to.match('DIV');
         // Test container styles
         testElementStyles(getContainerEl(instance), {
           width: '100%',
@@ -524,7 +532,7 @@ describe('panophoto/create()', () => {
     describe('when paramter "tipOnTop" is true', () => {
       beforeEach(() => { setCreateParam(inputs, 'tipOnTop', true); });
 
-      it('should contain an image grandchild "tip" that has very hight z-index', () =>
+      it('should contain an image grandchild "tip" that has very high z-index', () =>
         testCreate(inputs, (err, instance, done) => {
           testElementStyles(getTipEl(instance), {
             zIndex: '99999999',
