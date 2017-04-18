@@ -13,7 +13,7 @@ export default function createBrand() {
   brand.style.bottom = '50%';
   brand.style.visibility = 'hidden';
   brand.style.opacity = '0';
-  applyStyle(brand, 'pointer-events', 'none');
+  applyStyle(brand, 'pointerEvents', 'none');
   applyStyle(brand, 'transform', 'translate(-50%, 50%)');
   // States and method for brand
   brand.isShown = false;
@@ -28,7 +28,7 @@ export default function createBrand() {
   };
   brand.hide = () => {
     if (brand.isShown) {
-      applyStyle(brand, 'transition', 'visibility 0s linear .5s, opacity .5s linear');
+      applyStyle(brand, 'transition', 'visibility 0s linear 0.5s, opacity 0.5s linear');
       brand.style.visibility = 'hidden';
       brand.style.opacity = '0';
       brand.isShown = false;

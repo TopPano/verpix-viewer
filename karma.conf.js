@@ -6,7 +6,7 @@ const webpackCfg = require('./webpack.config');
 const useIframe = process.argv.includes('--iframe');
 
 module.exports = function(config) {
-  const browsers = ['PhantomJS'];
+  const browsers = ['SlimerJS'];
   const customLaunchers = {};
 
   config.set({
@@ -14,18 +14,27 @@ module.exports = function(config) {
     browsers,
     customLaunchers,
     files: [
-      'test/runner.js'
+      'test/runner.js',
+      // Use bluebird as Promise polyfill
+      'node_modules/bluebird/js/browser/bluebird.js',
+      // Dom 4 polyfill
+      'node_modules/dom4/build/dom4.js',
     ],
     port: 8080,
     captureTimeout: 60000,
     frameworks: [
       'mocha',
+      'chai-dom',
       'chai',
+      'sinon-chai',
       'sinon',
     ],
     client: {
       useIframe,
       mocha: {},
+      chai: {
+        includeStack: true,
+      },
     },
     singleRun: true,
     reporters: [
@@ -41,7 +50,7 @@ module.exports = function(config) {
       plugins: [
         new webpack.DefinePlugin({
           "process.env": {
-            PHANTOM: JSON.stringify(true),
+            SLIMER: JSON.stringify(true),
           }
         }),
       ],

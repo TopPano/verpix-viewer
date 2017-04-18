@@ -1,29 +1,19 @@
-import merge from 'lodash/merge';
-
 import { isMobile } from 'lib/devices';
 
-let events = {
-  WINDOW_RESIZE: 'resize',
+const EVENTS = {
+  WINDOW_RESIZE: ['resize', 'resize'],
+  CLICK_START: ['mousedown', 'touchstart'],
+  CLICK_MOVE: ['mousemove', 'touchmove'],
+  CLICK_END: ['mouseup', 'touchend'],
+  CLICK_CANCEL: ['mouseout', 'touchcancel'],
+  WHEEL: [[
+    'mousewheel', // IE9, Chrome, Safari, Opera
+    'DOMMouseScroll', // Firefox
+  ], []],
 };
-if (isMobile()) {
-  events = merge({}, events, {
-    CLICK_START: 'touchstart',
-    CLICK_MOVE: 'touchmove',
-    CLICK_END: 'touchend',
-    CLICK_CANCEL: 'touchcancel',
-  });
-} else {
-  events = merge({}, events, {
-    CLICK_START: 'mousedown',
-    CLICK_MOVE: 'mousemove',
-    CLICK_END: 'mouseup',
-    CLICK_CANCEL: 'mouseout',
-    WHEEL: [
-      'mousewheel', // IE9, Chrome, Safari, Opera
-      'DOMMouseScroll', // Firefox
-    ],
-  });
-}
 
-const EVENTS = events;
-export default EVENTS;
+const events = (eventName) => (
+  !isMobile() ? EVENTS[eventName][0] : EVENTS[eventName][1]
+);
+
+export default events;
