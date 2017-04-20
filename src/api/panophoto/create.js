@@ -16,6 +16,7 @@ import {
   execute,
 } from 'lib/utils';
 import createContainer from './createContainer';
+import determineQuality from './determineQuality';
 import constructPhotoUrls from './constructPhotoUrls';
 import PanophotoPlayer from './PanophotoPlayer';
 import optimizeMobile from '../common/optimizeMobile';
@@ -115,7 +116,7 @@ export default function create(source, params, callback) {
   let root = document.createElement('DIV');
   let mediaId;
   let photosSrcUrl;
-  // TODO: types & values check for parameters
+  let apiKey = params.apiKey;
   let width = params.width;
   let height = params.height;
   let initialLat = params.initialLat;
@@ -133,6 +134,7 @@ export default function create(source, params, callback) {
     root = source;
     // TODO: types & values check for attributes
     mediaId = getDataAttribute(root, 'id');
+    apiKey = getDataAttribute(root, 'api-key');
     width = getDataAttribute(root, 'width');
     height = getDataAttribute(root, 'height');
     initialLat = getDataAttribute(root, 'initial-lat');
@@ -158,11 +160,15 @@ export default function create(source, params, callback) {
     setDataAttribute(root, 'height', params.height);
   }
 
-  // Check the types of parameters
+  // Check the types & values of parameters
+  // TODO: types & values check for other parameters
   altPhotoUrl = isString(altPhotoUrl) ? altPhotoUrl : '';
+  apiKey = isString(apiKey) ? apiKey : '';
 
   if (createMethod === CREATE_METHOD.DOM || createMethod === CREATE_METHOD.ID) {
-    getMedia(mediaId).then((res) => {
+    const quality = determineQuality(width, height);
+
+    getMedia(mediaId, quality, apiKey).then((res) => {
       const { gaId } = res.owner;
       const { type } = res;
       const {
@@ -178,7 +184,7 @@ export default function create(source, params, callback) {
 
       createInstance({
         root,
-        photosSrcUrl: constructPhotoUrls(mediaId, res, width, height, disableCDN),
+        photosSrcUrl: constructPhotoUrls(mediaId, res, quality, disableCDN),
         altPhotoUrl,
         width,
         height,

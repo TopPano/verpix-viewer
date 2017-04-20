@@ -176,6 +176,7 @@ const testPhotoUrls = (
 describe('panophoto/create()', () => {
   // The existed media ID and its response
   const mediaId = 'ad32641ed06d6000';
+  const apiKey = '1d847021d22398516d480e2ecf543020';
   const gaId = 'UA-GAtracking-2';
   const type = 'panoPhoto';
   const lng = 37;
@@ -193,26 +194,13 @@ describe('panophoto/create()', () => {
     tiles: 2,
   }];
   const shardingKey = 'ab56';
-  const result = {
-    type,
-    owner: {
-      gaId,
-    },
-    dimension: {
-      lng,
-      lat,
-    },
-    content: {
-      cdnUrl,
-      storeUrl,
-      shardingKey,
-      quality,
-    },
-  };
 
   // The non-existed media ID and its response
   const nonExistedMediaId = 'ad44641ed06d65566';
   const nonExistedErrMsg = 'media not found';
+  // The non-matched API key and its response
+  const nonMatchedApiKey = '1d847021d22398516d480e2ecf543010';
+  const nonMatchedErrMsg = 'License not passed';
 
   // Inputs of customized parameters;
   const width = 300;
@@ -238,20 +226,62 @@ describe('panophoto/create()', () => {
     server = sinon.fakeServer.create({
       autoRespond: true,
     });
-    // Set response of existed media ID
-    setResponse(server, {
-      url: `${FETCH_ROOT}/media/${mediaId}`,
-      body: JSON.stringify({ result }),
-    });
-    // Set response of non-existed media ID
-    setResponse(server, {
-      status: 404,
-      url: `${FETCH_ROOT}/media/${nonExistedMediaId}`,
-      body: JSON.stringify({
-        error: {
-          message: nonExistedErrMsg,
+    // Set response of fake server
+    quality.forEach((qual) => {
+      const result = {
+        type,
+        owner: {
+          gaId,
         },
-      }),
+        dimension: {
+          lng,
+          lat,
+        },
+        content: {
+          cdnUrl,
+          storeUrl,
+          shardingKey,
+          tiles: qual.tiles,
+        },
+      };
+
+      // Set response of existed media ID
+      setResponse(server, `${FETCH_ROOT}/media/${mediaId}/${qual.size}`, 'GET', (xhr) => {
+        // Authentication message format: 'VERPIX $apiKey:$signature'
+        const authMessage = xhr.requestHeaders.authorization;
+
+        if (authMessage.startsWith('VERPIX ')) {
+          const key = authMessage.slice(7).split(':')[0];
+
+          if (key === apiKey) {
+            // Return media only when authentication passed
+            // TODO: We should check more for other fields, such as signature
+            return {
+              body: JSON.stringify({ result }),
+            };
+          }
+        }
+
+        // Return error message for failed authentication
+        return {
+          status: 401,
+          body: JSON.stringify({
+            error: {
+              message: nonMatchedErrMsg,
+            },
+          }),
+        };
+      });
+
+      // Set response of non-existed media ID
+      setResponse(server, `${FETCH_ROOT}/media/${nonExistedMediaId}/${qual.size}`, 'GET', {
+        status: 404,
+        body: JSON.stringify({
+          error: {
+            message: nonExistedErrMsg,
+          },
+        }),
+      });
     });
 
     // Stub the image loading method, replacing it by loading base64 image we provided
@@ -297,6 +327,9 @@ describe('panophoto/create()', () => {
       },
     });
 
+    // Set API key
+    setCreateParam(inputs, 'apiKey', apiKey);
+
     // Disable GA
     // TODO: Test GA events in the future
     setCreateParam(inputs, 'disableGA', true);
@@ -308,22 +341,7 @@ describe('panophoto/create()', () => {
     stubLoadImage.restore();
   });
 
-  describe('when input is type 0 or 1 but given media ID does not exist', () => {
-    beforeEach(() => {
-      // Only type 0 & 1 should be tested
-      inputs[0].source.setAttribute('data-id', nonExistedMediaId);
-      inputs[1].source = nonExistedMediaId;
-    });
-
-    describe('err', () => {
-      it(`should get error message "${nonExistedErrMsg}"`, () =>
-        testCreate(inputs.slice(0, 2), (err, instance, done) => {
-          testError(err, nonExistedErrMsg);
-          done();
-        })
-      );
-    });
-
+  const commonErrorTests = () => {
     describe('instance.root', () => {
       it('should equal to the given dom element for type 0', () =>
         testCreate(inputs.slice(0, 1), (err, instance, done) => {
@@ -373,6 +391,43 @@ describe('panophoto/create()', () => {
         })
       );
     });
+  };
+
+  describe('when input is type 0 or 1 but given media ID does not exist', () => {
+    beforeEach(() => {
+      // Only type 0 & 1 should be tested
+      inputs[0].source.setAttribute('data-id', nonExistedMediaId);
+      inputs[1].source = nonExistedMediaId;
+    });
+
+    describe('err', () => {
+      it(`should get error message "${nonExistedErrMsg}"`, () =>
+        testCreate(inputs.slice(0, 2), (err, instance, done) => {
+          testError(err, nonExistedErrMsg);
+          done();
+        })
+      );
+    });
+
+    commonErrorTests();
+  });
+
+  describe('when input is type 0 or 1 but the API key does not belong to the owner of requested media', () => {
+    beforeEach(() => {
+      // Only type 0 & 1 should be tested
+      setCreateParam(inputs.slice(0, 2), 'apiKey', nonMatchedApiKey);
+    });
+
+    describe('err', () => {
+      it(`should get error message "${nonMatchedErrMsg}"`, () =>
+        testCreate(inputs.slice(0, 2), (err, instance, done) => {
+          testError(err, nonMatchedErrMsg);
+          done();
+        })
+      );
+    });
+
+    commonErrorTests();
   });
 
   describe('err', () => {
@@ -669,7 +724,7 @@ describe('panophoto/create()', () => {
         setCreateParam(inputs.slice(0, 2), 'height', 200);
       });
 
-      it('should load highest quality photos for type 0 and 1', () =>
+      it('should load "8000x4000" quality photos for type 0 and 1', () =>
         testCreate(inputs.slice(0, 2), (err, instance, done) => {
           instance.start(() => {
             testPhotoUrls(
@@ -692,7 +747,7 @@ describe('panophoto/create()', () => {
         setCreateParam(inputs.slice(0, 2), 'height', 500);
       });
 
-      it('should load highest quality photos for type 0 and 1', () =>
+      it('should load "8000x4000" quality photos for type 0 and 1', () =>
         testCreate(inputs.slice(0, 2), (err, instance, done) => {
           instance.start(() => {
             testPhotoUrls(
@@ -715,7 +770,7 @@ describe('panophoto/create()', () => {
         setCreateParam(inputs.slice(0, 2), 'height', 500);
       });
 
-      it('should load highest quality photos for type 0 and 1', () =>
+      it('should load "8000x4000" quality photos for type 0 and 1', () =>
         testCreate(inputs.slice(0, 2), (err, instance, done) => {
           instance.start(() => {
             testPhotoUrls(
@@ -738,7 +793,7 @@ describe('panophoto/create()', () => {
         setCreateParam(inputs.slice(0, 2), 'height', 200);
       });
 
-      it('should load lowest quality photos for type 0 and 1', () =>
+      it('should load "2000x1000" quality photos for type 0 and 1', () =>
         testCreate(inputs.slice(0, 2), (err, instance, done) => {
           instance.start(() => {
             testPhotoUrls(
