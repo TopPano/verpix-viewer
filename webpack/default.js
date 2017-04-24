@@ -4,6 +4,7 @@ const path = require('path');
 const webpack = require('webpack');
 const AssetsPlugin = require('assets-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
+const JavaScriptObfuscator = require('webpack-obfuscator');
 const merge = require('lodash/merge');
 
 const pkg = require('../package.json');
@@ -165,6 +166,29 @@ if (!isDebug) {
   config.plugins.push(new webpack.optimize.DedupePlugin());
   config.plugins.push(new webpack.optimize.UglifyJsPlugin({ compress: { warnings: isVerbose } }));
   config.plugins.push(new webpack.optimize.AggressiveMergingPlugin());
+  // Add plugin to obfuscate JS code.
+  // According the following FAQ link, it should be added after UglifyJSPlugin to prevent the code
+  // from breaking.
+  // https://javascriptobfuscator.herokuapp.com/#FAQ
+  // The options are used for low obfuscation and high performance code.
+  // The combination is recommended from the author of javascript-obfuscator:
+  // https://github.com/javascript-obfuscator/javascript-obfuscator#low-obfuscation-high-performance
+  config.plugins.push(new JavaScriptObfuscator({
+    // Low obfuscation, high performance
+    compact: true,
+    controlFlowFlattening: false,
+    deadCodeInjection: false,
+    debugProtection: false,
+    debugProtectionInterval: false,
+    disableConsoleOutput: true,
+    mangle: true,
+    rotateStringArray: true,
+    selfDefending: true,
+    stringArray: true,
+    stringArrayEncoding: false,
+    stringArrayThreshold: 0.75,
+    unicodeEscapeSequence: false,
+  }));
   // Compress output js files by gzip
   config.plugins.push(new CompressionPlugin({
     asset: "[path]",
