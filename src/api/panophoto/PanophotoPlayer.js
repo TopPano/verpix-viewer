@@ -15,7 +15,7 @@ import { PLAY_MODE } from 'constants/common';
 import { isMobile, isIOS, isIframe } from 'lib/devices';
 import { getPosition } from 'lib/events/click';
 import execute from 'lib/utils/execute';
-import EVENTS from 'constants/events';
+import events from 'constants/events';
 import GyroNorm from 'external/gyronorm';
 
 const SPHERE_RADIUS = 1000;
@@ -60,6 +60,7 @@ export default class PanophotoPlayer {
     this.initialLat = isNumber(params.initialLat) ? clamp(params.initialLat, LAT_MIN, LAT_MAX) : 0;
     // eslint-disable-next-line no-unneeded-ternary
     this.isAutoplayEnabled = (params.autoplay === false) ? false : true;
+    this.loopMediaIcon = params.loopMediaIcon;
     this.manualToAutoTime =
       (isNumber(params.idleDuration) && params.idleDuration > 0) ?
       parseInt(params.idleDuration * 1000, 10) :
@@ -69,9 +70,9 @@ export default class PanophotoPlayer {
   }
 
   // Entry function for starting
-  start = () => {
+  start = (callback) => {
     this.resetMemberVars();
-    this.startPlay();
+    this.startPlay(callback);
   }
 
   // Entry function for stopping
@@ -80,7 +81,7 @@ export default class PanophotoPlayer {
   }
 
   // Entry function for getting current coordinates (longitude and latitude)
-  getCurrentCoordinates = () => ({
+  getCurrentCoordinates = () => (!this.camera ? null : {
     lng: this.camera.lng,
     lat: this.camera.lat,
   })
@@ -203,6 +204,7 @@ export default class PanophotoPlayer {
       showBrandAtStart: PARAMS_DEFAULT.SHOW_BRAND_AT_START,
       hideStartedBrandAuto: PARAMS_DEFAULT.HIDE_STARTED_BRAND_AUTO,
       hideStartedBrandAutoDuration: PARAMS_DEFAULT.HIDE_STARTED_BRAND_AUTO_DURATION,
+      loop: this.loopMediaIcon,
     };
     this.brandContext.instance.hide();
     // Hide the tip
@@ -210,7 +212,7 @@ export default class PanophotoPlayer {
   }
 
   // Start playing
-  startPlay() {
+  startPlay(callback) {
     this.setup();
     this.buildScene(this.photosSrcUrl, () => {
       this.addEventHandlers();
@@ -222,6 +224,9 @@ export default class PanophotoPlayer {
         this.showStartedBrand();
       }
       this.animationTimer = raf(this.onAnimationFrame);
+      execute(callback);
+    }, () => {
+      execute(callback);
     });
   }
 
@@ -274,32 +279,32 @@ export default class PanophotoPlayer {
 
   // Add handlers for swipe (click or touch)
   addSwipeHandlers() {
-    this.container.addEventListener(EVENTS.CLICK_START, this.handleSwipeStart);
-    this.container.addEventListener(EVENTS.CLICK_MOVE, this.handleSwipeMove);
-    this.container.addEventListener(EVENTS.CLICK_END, this.handleSwipeEnd);
-    this.container.addEventListener(EVENTS.CLICK_CANCEL, this.handleSwipeEnd);
+    this.container.addEventListener(events('CLICK_START'), this.handleSwipeStart);
+    this.container.addEventListener(events('CLICK_MOVE'), this.handleSwipeMove);
+    this.container.addEventListener(events('CLICK_END'), this.handleSwipeEnd);
+    this.container.addEventListener(events('CLICK_CANCEL'), this.handleSwipeEnd);
     this.updateTimer = raf(this.onUpdate);
   }
 
   // Remove handlers for swipe (click or touch)
   removeSwipeHandlers() {
-    this.container.removeEventListener(EVENTS.CLICK_START, this.handleSwipeStart);
-    this.container.removeEventListener(EVENTS.CLICK_MOVE, this.handleSwipeMove);
-    this.container.removeEventListener(EVENTS.CLICK_END, this.handleSwipeEnd);
-    this.container.removeEventListener(EVENTS.CLICK_CANCEL, this.handleSwipeEnd);
+    this.container.removeEventListener(events('CLICK_START'), this.handleSwipeStart);
+    this.container.removeEventListener(events('CLICK_MOVE'), this.handleSwipeMove);
+    this.container.removeEventListener(events('CLICK_END'), this.handleSwipeEnd);
+    this.container.removeEventListener(events('CLICK_CANCEL'), this.handleSwipeEnd);
     this.clearUpdateTimer();
   }
 
   // Add handlers for mouse wheel
   addWheelHandlers() {
-    EVENTS.WHEEL.forEach((wheelEvent) => {
+    events('WHEEL').forEach((wheelEvent) => {
       this.container.addEventListener(wheelEvent, this.handleWheel);
     });
   }
 
   // Remove handlers for mouse wheel
   removeWheelHandlers() {
-    EVENTS.WHEEL.forEach((wheelEvent) => {
+    events('WHEEL').forEach((wheelEvent) => {
       this.container.removeEventListener(wheelEvent, this.handleWheel);
     });
   }
@@ -377,7 +382,7 @@ export default class PanophotoPlayer {
   }
 
   // Generate textrues from images.
-  buildScene(imgs, callback) {
+  buildScene(imgs, onSuccess, onFailure) {
     const loader = new THREE.TextureLoader();
     let count = 0;
 
@@ -389,12 +394,13 @@ export default class PanophotoPlayer {
         this.addMesh(texture, index, imgs.length);
         count++;
         if (count === imgs.length) {
-          execute(callback);
+          execute(onSuccess);
         }
       }, () => {
         // TODO: function called when download progresses
       }, () => {
         this.altPhoto.show();
+        execute(onFailure);
       });
     });
   }
@@ -475,8 +481,20 @@ export default class PanophotoPlayer {
             this.autoPlay.startWaitTime = now();
             this.autoPlay.accumulativeMovement = 0;
             this.tip.show();
-            this.brandContext.instance.show();
-            this.dimScene();
+            if (this.brandContext.loop) {
+              // If loop is true, show the brand in auto mode.
+              this.brandContext.instance.show();
+              this.dimScene();
+            } else {
+              if (this.brand.isShown) {
+                // In some cases, the started brand is shown when we are changing
+                // from manual to auto mode. We should hide the brand if loop is false.
+                // (The cases occur when idle duration is less than started branding
+                //  hidding duration)
+                this.brandContext.instance.hide();
+                this.brightenScene();
+              }
+            }
           }
         }
       }
@@ -674,13 +692,13 @@ export default class PanophotoPlayer {
       if (this.play.mode !== PLAY_MODE.AUTO) {
         this.brandContext.instance.hide();
         this.brightenScene();
-        this.container.removeEventListener(EVENTS.CLICK_START, hideStartedBrand);
+        this.container.removeEventListener(events('CLICK_START'), hideStartedBrand);
         clearInterval(rotationCheckTimer);
         clearTimeout(hideStartedBrandTimer);
       }
     };
     // Hide the started brand after first click
-    this.container.addEventListener(EVENTS.CLICK_START, hideStartedBrand);
+    this.container.addEventListener(events('CLICK_START'), hideStartedBrand);
     // Hide the started brand if the device is rotated obviously
     rotationCheckTimer = setInterval(() => {
       const rotationDelta = this.getRotationDelta();

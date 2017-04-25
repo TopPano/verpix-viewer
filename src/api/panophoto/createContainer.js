@@ -29,8 +29,8 @@ export default function createContainer(root, width, height, altPhotoUrl, tipPar
   container.style.width = '100%';
   container.style.height = '100%';
   container.style.position = 'absolute';
-  container.style.top = '0';
-  container.style.left = '0';
+  container.style.top = '0px';
+  container.style.left = '0px';
 
   root.appendChild(wrapper);
   wrapper.appendChild(container);

@@ -37,6 +37,7 @@ const config = {
         test: /\.js?$/,
         include: [
           path.resolve(__dirname, '../test'),
+          path.resolve(__dirname, '../config'),
         ],
         loader: `babel-loader?${JSON.stringify(babelConfig)}`,
       },
