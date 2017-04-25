@@ -20,3 +20,8 @@ RUN npm install -g pm2
 # cp project
 ADD . /home/verpix/verpix-viewer
 RUN chown -R verpix:verpix /home/verpix/verpix-viewer
+
+# npm install
+USER verpix
+WORKDIR /home/verpix/verpix-viewer
+RUN npm install
