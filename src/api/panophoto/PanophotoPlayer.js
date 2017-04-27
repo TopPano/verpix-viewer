@@ -60,6 +60,7 @@ export default class PanophotoPlayer {
     this.initialLat = isNumber(params.initialLat) ? clamp(params.initialLat, LAT_MIN, LAT_MAX) : 0;
     // eslint-disable-next-line no-unneeded-ternary
     this.isAutoplayEnabled = (params.autoplay === false) ? false : true;
+    this.loopMediaIcon = params.loopMediaIcon;
     this.manualToAutoTime =
       (isNumber(params.idleDuration) && params.idleDuration > 0) ?
       parseInt(params.idleDuration * 1000, 10) :
@@ -203,6 +204,7 @@ export default class PanophotoPlayer {
       showBrandAtStart: PARAMS_DEFAULT.SHOW_BRAND_AT_START,
       hideStartedBrandAuto: PARAMS_DEFAULT.HIDE_STARTED_BRAND_AUTO,
       hideStartedBrandAutoDuration: PARAMS_DEFAULT.HIDE_STARTED_BRAND_AUTO_DURATION,
+      loop: this.loopMediaIcon,
     };
     this.brandContext.instance.hide();
     // Hide the tip
@@ -479,8 +481,20 @@ export default class PanophotoPlayer {
             this.autoPlay.startWaitTime = now();
             this.autoPlay.accumulativeMovement = 0;
             this.tip.show();
-            this.brandContext.instance.show();
-            this.dimScene();
+            if (this.brandContext.loop) {
+              // If loop is true, show the brand in auto mode.
+              this.brandContext.instance.show();
+              this.dimScene();
+            } else {
+              if (this.brand.isShown) {
+                // In some cases, the started brand is shown when we are changing
+                // from manual to auto mode. We should hide the brand if loop is false.
+                // (The cases occur when idle duration is less than started branding
+                //  hidding duration)
+                this.brandContext.instance.hide();
+                this.brightenScene();
+              }
+            }
           }
         }
       }
