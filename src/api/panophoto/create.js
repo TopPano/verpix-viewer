@@ -40,7 +40,7 @@ function createInstance({
   autoplay,
   tipOnTop,
   idleDuration,
-  loopBrand,
+  loopMediaIcon,
   logo,
   redirectURL,
   callback,
@@ -65,7 +65,7 @@ function createInstance({
     initialLng,
     autoplay,
     idleDuration,
-    loopBrand,
+    loopMediaIcon,
     altPhoto,
     brand,
     tip,
@@ -126,7 +126,7 @@ export default function create(source, params, callback) {
   let altPhotoUrl = params.altPhoto;
   let tipOnTop = params.tipOnTop;
   let idleDuration = params.idleDuration;
-  let loopBrand = params.loopBrand;
+  let loopMediaIcon = params.loopMediaIcon;
   let disableCDN = params.disableCDN;
   let disableGA = params.disableGA;
 
@@ -144,7 +144,7 @@ export default function create(source, params, callback) {
     altPhotoUrl = getDataAttribute(root, 'alt-photo');
     tipOnTop = getDataAttribute(root, 'tip-on-top');
     idleDuration = getDataAttribute(root, 'idle-duration');
-    loopBrand = getDataAttribute(root, 'loop-brand');
+    loopMediaIcon = getDataAttribute(root, 'loop-media-icon');
     disableCDN = getDataAttribute(root, 'disable-cdn');
     disableGA = getDataAttribute(root, 'disable-ga');
   } else if (isString(source)) {
@@ -164,7 +164,7 @@ export default function create(source, params, callback) {
 
   // Check the types of parameters
   altPhotoUrl = isString(altPhotoUrl) ? altPhotoUrl : '';
-  loopBrand = (loopBrand === true);
+  loopMediaIcon = (loopMediaIcon === true);
 
   if (createMethod === CREATE_METHOD.DOM || createMethod === CREATE_METHOD.ID) {
     getMedia(mediaId).then((res) => {
@@ -192,7 +192,7 @@ export default function create(source, params, callback) {
         autoplay,
         tipOnTop,
         idleDuration,
-        loopBrand,
+        loopMediaIcon,
         callback,
       });
     }).catch((err) => {
@@ -217,7 +217,7 @@ export default function create(source, params, callback) {
       autoplay,
       tipOnTop,
       idleDuration,
-      loopBrand,
+      loopMediaIcon,
       callback,
     });
   } else {
