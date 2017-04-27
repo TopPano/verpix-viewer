@@ -5,6 +5,7 @@ const webpack = require('webpack');
 const AssetsPlugin = require('assets-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
 const JavaScriptObfuscator = require('webpack-obfuscator');
+const ConcatFilesPlugin = require('./ConcatFilesPlugin');
 const merge = require('lodash/merge');
 
 const pkg = require('../package.json');
@@ -163,18 +164,54 @@ const config = {
 
 // Optimize the bundle in release (production) mode
 if (!isDebug) {
+  const extractVendorPlugins = (chunkNames) => chunkNames.map((chunkName) => (
+    new webpack.optimize.CommonsChunkPlugin({
+      name: `${chunkName}-vendor`,
+      chunks: [chunkName],
+      minChunks: ({ resource }) => (
+        resource &&
+        (resource.indexOf('node_modules') >= 0 || resource.indexOf('external') >= 0) &&
+        resource.match(/\.js$/)
+      ),
+    })
+  ));
+
+  const concatVendorPlugins = (chunkNames) => chunkNames.map((chunkName) => (
+    new ConcatFilesPlugin({
+      from: `${chunkName}-vendor.js`,
+      to: `${chunkName}.js`,
+    })
+  ));
+
+  // Get all output bundle names.
+  // For example, if our entry is: {
+  //   'sdk': '../src/main',
+  //   'sdk-panophoto: '../src/api/panophoto',
+  // }, then the outpus will be:
+  // [ 'sdk', 'sdk-panophoto' ]
+  const outputs = Object.keys(config.entry);
+
+  // Optimize bundles
   config.plugins.push(new webpack.optimize.DedupePlugin());
   config.plugins.push(new webpack.optimize.UglifyJsPlugin({ compress: { warnings: isVerbose } }));
   config.plugins.push(new webpack.optimize.AggressiveMergingPlugin());
+
+  // Extract the vendor parts (dependecies in node_modules) from bundles.
+  // For example, if we have bundles "sdk" and "sdk-panophoto", the plugins will extract the vendor
+  // parts from them, and store in others bundles named "sdk-vendor" and "sdk-panophoto-vendor".
+  config.plugins = config.plugins.concat(extractVendorPlugins(outputs));
+
   // Add plugin to obfuscate JS code.
-  // According the following FAQ link, it should be added after UglifyJSPlugin to prevent the code
+  // 1. We only obfuscate the code in our project, i.e., we don't obfuscate the vendor code.
+  // 2. According the following FAQ link, it should be added after UglifyJSPlugin to prevent the code
   // from breaking.
   // https://javascriptobfuscator.herokuapp.com/#FAQ
-  // The options are used for low obfuscation and high performance code.
+  // 3. The options are used for low obfuscation and high performance code.
   // The combination is recommended from the author of javascript-obfuscator:
   // https://github.com/javascript-obfuscator/javascript-obfuscator#low-obfuscation-high-performance
   config.plugins.push(new JavaScriptObfuscator({
     // Low obfuscation, high performance
+    sourceMap: false,
     compact: true,
     controlFlowFlattening: false,
     deadCodeInjection: false,
@@ -188,7 +225,13 @@ if (!isDebug) {
     stringArrayEncoding: false,
     stringArrayThreshold: 0.75,
     unicodeEscapeSequence: false,
-  }));
+  }, ['**-vendor.js']));
+
+  // Concatenate the vendor parts to bundles that belong to them.
+  // For exmaple, "sdk-vendor" will be concatenated to "sdk" and "sdk-panophoto-vendor" will be
+  // concatenated to "sdk-panophoto".
+  config.plugins = config.plugins.concat(concatVendorPlugins(outputs));
+
   // Compress output js files by gzip
   config.plugins.push(new CompressionPlugin({
     asset: "[path]",
