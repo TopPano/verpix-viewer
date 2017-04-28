@@ -4,10 +4,20 @@ const webpack = require('webpack');
 const webpackCfg = require('./webpack.config');
 
 const useIframe = process.argv.includes('--iframe');
+const completed = process.argv.includes('--completed');
 
 module.exports = function(config) {
-  const browsers = ['SlimerJS'];
-  const customLaunchers = {};
+  const customLaunchers = !completed ? {} : {
+    // Chrome on Windows
+    'SL_Chrome': {
+      base: 'SauceLabs',
+      browserName: 'chrome',
+      version: '49.0',
+      platform: 'Windows 10',
+    },
+  };
+  const browsers =
+    !completed ? ['SlimerJS'] : Object.keys(customLaunchers);
 
   config.set({
     basePath: '',
@@ -21,7 +31,7 @@ module.exports = function(config) {
       'node_modules/dom4/build/dom4.js',
     ],
     port: 8080,
-    captureTimeout: 60000,
+    captureTimeout: 120000,
     frameworks: [
       'mocha',
       'chai-dom',
@@ -37,26 +47,33 @@ module.exports = function(config) {
       },
     },
     singleRun: true,
-    reporters: [
+    reporters: !completed ? [
       'mocha',
       'coverage',
+    ] : [
+      'mocha',
+      'saucelabs',
     ],
     preprocessors: {
       'test/runner.js': [
         'webpack',
       ],
     },
+    concurrency: 5,
     webpack: merge(webpackCfg, {
       plugins: [
         new webpack.DefinePlugin({
           "process.env": {
-            SLIMER: JSON.stringify(true),
+            SLIMER: !completed ? JSON.stringify(true) : JSON.stringify(false)
           }
         }),
       ],
     }),
     webpackServer: {
       noInfo: true,
+    },
+    sauceLabs: !completed ? {} : {
+      testName: 'Verpix Viewer Testing',
     },
     coverageReporter: {
       dir: 'coverage/',
