@@ -231,6 +231,12 @@ Note that when specifying these parameters as data-attributes, you should conver
 			<td>Determine how long the idle duration to autoplay. This parameters is taken only when autoplay is true.</td>
 		</tr>
     <tr>
+			<td>loopMediaIcon</td>
+			<td>boolean</td>
+			<td>false</td>
+			<td>In autoplay mode, show an 360 icon or not. This parameters is taken only when autoplay is true.</td>
+		</tr>
+    <tr>
 			<td>altPhotoUrl</td>
 			<td>string</td>
 			<td>''</td>
