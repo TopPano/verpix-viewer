@@ -13,7 +13,7 @@ import {
   SWIPE_MODE,
 } from 'constants/common';
 import { LIVEPHOTO_DEFAULT } from 'constants/livephoto';
-import EVENTS from 'constants/events';
+import events from 'constants/events';
 import { isMobile } from 'lib/devices';
 import { isHover } from 'lib/dom';
 import { getPosition } from 'lib/events/click';
@@ -186,11 +186,11 @@ export default class LivephotoPlayer {
   startPlay() {
     if (this.isPlayerEnabled) {
       this.tip.show();
-      this.container.addEventListener(EVENTS.CLICK_START, this.handleTransitionStart);
-      this.container.addEventListener(EVENTS.CLICK_MOVE, this.handleTransitionMove);
-      this.container.addEventListener(EVENTS.CLICK_END, this.handleTransitionEnd);
-      this.container.addEventListener(EVENTS.CLICK_CANCEL, this.handleTransitionEnd);
-      window.addEventListener(EVENTS.WINDOW_RESIZE, this.handleWindowResize);
+      this.container.addEventListener(events('CLICK_START'), this.handleTransitionStart);
+      this.container.addEventListener(events('CLICK_MOVE'), this.handleTransitionMove);
+      this.container.addEventListener(events('CLICK_END'), this.handleTransitionEnd);
+      this.container.addEventListener(events('CLICK_CANCEL'), this.handleTransitionEnd);
+      window.addEventListener(events('WINDOW_RESIZE'), this.handleWindowResize);
       if (isMobile()) {
         this.gyro = new Gyro(this.handleRotation);
         this.gyro.start();
@@ -203,11 +203,11 @@ export default class LivephotoPlayer {
 
   stopPlay() {
     this.tip.hide();
-    this.container.removeEventListener(EVENTS.CLICK_START, this.handleTransitionStart);
-    this.container.removeEventListener(EVENTS.CLICK_MOVE, this.handleTransitionMove);
-    this.container.removeEventListener(EVENTS.CLICK_END, this.handleTransitionEnd);
-    this.container.removeEventListener(EVENTS.CLICK_CANCEL, this.handleTransitionEnd);
-    window.removeEventListener(EVENTS.WINDOW_RESIZE, this.handleWindowResize);
+    this.container.removeEventListener(events('CLICK_START'), this.handleTransitionStart);
+    this.container.removeEventListener(events('CLICK_MOVE'), this.handleTransitionMove);
+    this.container.removeEventListener(events('CLICK_END'), this.handleTransitionEnd);
+    this.container.removeEventListener(events('CLICK_CANCEL'), this.handleTransitionEnd);
+    window.removeEventListener(events('WINDOW_RESIZE'), this.handleWindowResize);
     if (isMobile()) {
       this.gyro.stop();
     }

@@ -17,25 +17,34 @@ module.exports = function(config) {
     },
   };
   const browsers =
-    !completed ? ['PhantomJS'] : Object.keys(customLaunchers);
+    !completed ? ['SlimerJS'] : Object.keys(customLaunchers);
 
   config.set({
     basePath: '',
     browsers,
     customLaunchers,
     files: [
-      'test/runner.js'
+      'test/runner.js',
+      // Use bluebird as Promise polyfill
+      'node_modules/bluebird/js/browser/bluebird.js',
+      // Dom 4 polyfill
+      'node_modules/dom4/build/dom4.js',
     ],
     port: 8080,
     captureTimeout: 120000,
     frameworks: [
       'mocha',
+      'chai-dom',
       'chai',
+      'sinon-chai',
       'sinon',
     ],
     client: {
       useIframe,
       mocha: {},
+      chai: {
+        includeStack: true,
+      },
     },
     singleRun: true,
     reporters: !completed ? [
@@ -55,7 +64,7 @@ module.exports = function(config) {
       plugins: [
         new webpack.DefinePlugin({
           "process.env": {
-            PHANTOM: !completed ? JSON.stringify(true) : JSON.stringify(false),
+            SLIMER: !completed ? JSON.stringify(true) : JSON.stringify(false)
           }
         }),
       ],

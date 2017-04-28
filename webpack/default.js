@@ -3,6 +3,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const AssetsPlugin = require('assets-webpack-plugin');
+const CompressionPlugin = require('compression-webpack-plugin');
 const merge = require('lodash/merge');
 
 const pkg = require('../package.json');
@@ -164,6 +165,13 @@ if (!isDebug) {
   config.plugins.push(new webpack.optimize.DedupePlugin());
   config.plugins.push(new webpack.optimize.UglifyJsPlugin({ compress: { warnings: isVerbose } }));
   config.plugins.push(new webpack.optimize.AggressiveMergingPlugin());
+  // Compress output js files by gzip
+  config.plugins.push(new CompressionPlugin({
+    asset: "[path]",
+    algorithm: "gzip",
+    test: /\.js$/,
+    deleteOriginalAssets: true,
+  }));
 }
 
 // Hot Module Replacement (HMR)

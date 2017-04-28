@@ -16,7 +16,7 @@ import {
   execute,
 } from 'lib/utils';
 import createContainer from './createContainer';
-import constructPhotoUrls from './constructPhotUrls';
+import constructPhotoUrls from './constructPhotoUrls';
 import PanophotoPlayer from './PanophotoPlayer';
 import optimizeMobile from '../common/optimizeMobile';
 import getMedia from '../common/getMedia';
@@ -40,6 +40,7 @@ function createInstance({
   autoplay,
   tipOnTop,
   idleDuration,
+  loopMediaIcon,
   logo,
   redirectURL,
   callback,
@@ -64,6 +65,7 @@ function createInstance({
     initialLng,
     autoplay,
     idleDuration,
+    loopMediaIcon,
     altPhoto,
     brand,
     tip,
@@ -124,6 +126,7 @@ export default function create(source, params, callback) {
   let altPhotoUrl = params.altPhoto;
   let tipOnTop = params.tipOnTop;
   let idleDuration = params.idleDuration;
+  let loopMediaIcon = params.loopMediaIcon;
   let disableCDN = params.disableCDN;
   let disableGA = params.disableGA;
 
@@ -141,6 +144,7 @@ export default function create(source, params, callback) {
     altPhotoUrl = getDataAttribute(root, 'alt-photo');
     tipOnTop = getDataAttribute(root, 'tip-on-top');
     idleDuration = getDataAttribute(root, 'idle-duration');
+    loopMediaIcon = getDataAttribute(root, 'loop-media-icon');
     disableCDN = getDataAttribute(root, 'disable-cdn');
     disableGA = getDataAttribute(root, 'disable-ga');
   } else if (isString(source)) {
@@ -157,6 +161,10 @@ export default function create(source, params, callback) {
     setDataAttribute(root, 'width', params.width);
     setDataAttribute(root, 'height', params.height);
   }
+
+  // Check the types of parameters
+  altPhotoUrl = isString(altPhotoUrl) ? altPhotoUrl : '';
+  loopMediaIcon = (loopMediaIcon === true);
 
   if (createMethod === CREATE_METHOD.DOM || createMethod === CREATE_METHOD.ID) {
     getMedia(mediaId).then((res) => {
@@ -184,6 +192,7 @@ export default function create(source, params, callback) {
         autoplay,
         tipOnTop,
         idleDuration,
+        loopMediaIcon,
         callback,
       });
     }).catch((err) => {
@@ -200,6 +209,7 @@ export default function create(source, params, callback) {
     createInstance({
       root,
       photosSrcUrl,
+      altPhotoUrl,
       width,
       height,
       initialLat,
@@ -207,6 +217,7 @@ export default function create(source, params, callback) {
       autoplay,
       tipOnTop,
       idleDuration,
+      loopMediaIcon,
       callback,
     });
   } else {

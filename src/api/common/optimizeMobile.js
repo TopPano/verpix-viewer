@@ -1,9 +1,9 @@
 import { isMobile } from 'lib/devices';
-import EVENTS from 'constants/events';
+import events from 'constants/events';
 
 export default function optimizeMobile(el) {
   if (isMobile()) {
-    el.addEventListener(EVENTS.CLICK_MOVE, (e) => {
+    el.addEventListener(events('CLICK_MOVE'), (e) => {
       e.preventDefault();
     });
   }
