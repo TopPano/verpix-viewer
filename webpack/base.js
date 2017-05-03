@@ -17,6 +17,7 @@ const config = {
   plugins: [
     // Switch loaders to debug or release mode
     new webpack.LoaderOptionsPlugin({
+      minimize: !isDebug,
       debug: isDebug,
     }),
   ],
