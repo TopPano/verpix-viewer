@@ -13,8 +13,13 @@ const config = {
   // The base directory for resolving the entry option
   context: __dirname,
 
-  // Switch loaders to debug or release mode
-  debug: isDebug,
+  // The list of plugins for Webpack compiler
+  plugins: [
+    // Switch loaders to debug or release mode
+    new webpack.LoaderOptionsPlugin({
+      debug: isDebug,
+    }),
+  ],
 
   // Developer tool to enhance debugging, source maps
   // http://webpack.github.io/docs/configuration.html#devtool
@@ -33,15 +38,15 @@ const config = {
     cachedAssets: isVerbose,
   },
 
+  // Modules Paths resolving
   resolve: {
-    extensions: ['', '.js'],
-    root: path.resolve(__dirname, '../'),
     alias: {
-      constants: 'src/constants',
-      lib: 'src/lib',
-      api: 'src/api',
-      external: 'external',
-      config: 'config',
+      constants: path.resolve(__dirname, '../src/constants'),
+      lib: path.resolve(__dirname, '../src/lib'),
+      api: path.resolve(__dirname, '../src/api'),
+      external: path.resolve(__dirname, '../external'),
+      config: path.resolve(__dirname, '../config'),
+      test: path.resolve(__dirname, '../test'),
     },
   },
 };
