@@ -7564,6 +7564,11 @@
       "resolved": "https://registry.npmjs.org/progress/-/progress-1.1.8.tgz",
       "dev": true
     },
+    "promise-polyfill": {
+      "version": "6.0.2",
+      "from": "promise-polyfill@latest",
+      "resolved": "https://registry.npmjs.org/promise-polyfill/-/promise-polyfill-6.0.2.tgz"
+    },
     "proper-lockfile": {
       "version": "1.2.0",
       "from": "proper-lockfile@>=1.1.2 <2.0.0",
@@ -8981,11 +8986,6 @@
       "from": "tfunk@>=3.0.1 <4.0.0",
       "resolved": "https://registry.npmjs.org/tfunk/-/tfunk-3.1.0.tgz",
       "dev": true
-    },
-    "three": {
-      "version": "0.79.0",
-      "from": "three@latest",
-      "resolved": "https://registry.npmjs.org/three/-/three-0.79.0.tgz"
     },
     "through": {
       "version": "2.3.8",

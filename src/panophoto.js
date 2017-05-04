@@ -1,12 +1,14 @@
 import forEach from 'lodash/forEach';
-import merge from 'lodash/merge';
 
 import panophoto from './api/panophoto';
 
+import './polyfills';
+
 // Add api to global variable
-window.verpix = merge({}, window.verpix, {
-  createPanophoto: panophoto.create,
-});
+if (!window.verpix) {
+  window.verpix = {};
+}
+window.verpix.createPanophoto = panophoto.create;
 
 window.addEventListener('load', () => {
   // Create panophoto(s) from DOM elements
