@@ -1,20 +1,23 @@
 import range from 'lodash/range';
 
-export default function constructPhotoUrls(
-  mediaId,
-  mediaObj,
-  quality,
-  isCDNDisabled = false
-) {
+export default function constructPhotoUrls(mediaObj, isCDNDisabled = false) {
+  const {
+    sid,
+    content,
+  } = mediaObj;
   const {
     cdnUrl,
     storeUrl,
-    tiles,
+    quality,
     shardingKey,
-  } = mediaObj.content;
+  } = content;
   const storeRoot = isCDNDisabled ? storeUrl : cdnUrl;
+  const {
+    size,
+    tiles,
+  } = quality[0];
 
   return range(0, tiles).map((idx) => (
-    `${storeRoot}${shardingKey}/media/${mediaId}/pano/${quality}/${idx}.jpg`
+    `${storeRoot}${shardingKey}/media/${sid}/pano/${size}/${idx}.jpg`
   ));
 }

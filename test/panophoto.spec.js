@@ -229,6 +229,7 @@ describe('panophoto/create()', () => {
     // Set response of fake server
     quality.forEach((qual) => {
       const result = {
+        sid: mediaId,
         type,
         owner: {
           gaId,
@@ -241,7 +242,7 @@ describe('panophoto/create()', () => {
           cdnUrl,
           storeUrl,
           shardingKey,
-          tiles: qual.tiles,
+          quality: [qual],
         },
       };
 

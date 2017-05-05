@@ -184,7 +184,7 @@ export default function create(source, params, callback) {
 
       createInstance({
         root,
-        photosSrcUrl: constructPhotoUrls(mediaId, res, quality, disableCDN),
+        photosSrcUrl: constructPhotoUrls(res, disableCDN),
         altPhotoUrl,
         width,
         height,
