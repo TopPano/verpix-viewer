@@ -1,3 +1,5 @@
+/* eslint-disable max-len */
+
 import fetch from 'isomorphic-fetch';
 import isString from 'lodash/isString';
 import Promise from 'bluebird';
@@ -14,6 +16,7 @@ const BCRYPT_SALT_ROUND = 5;
 // Promisify the async functions
 const genBcryptSalt = Promise.promisify(bcrypt.genSalt);
 const bcryptHash = Promise.promisify(bcrypt.hash);
+const bcryptCompare = Promise.promisify(bcrypt.compare);
 
 const reverseString = (str) => str.split('').reverse().join('');
 
@@ -42,6 +45,9 @@ export default function getMedia(mediaId, quality, apiKey) {
     `${timestamp}${apiKey}${resourceName}${reverseString(timestamp.toString())}` :
     `${timestamp}${reverseString(resourceName)}${apiKey}${timestamp}`;
 
+  // Variable to store the result from response
+  let result;
+
   return genBcryptSalt((BCRYPT_SALT_ROUND))
     // Bcrypt-Hash
     .then((salt) => bcryptHash(plain, salt))
@@ -67,6 +73,29 @@ export default function getMedia(mediaId, quality, apiKey) {
       if (data.error) {
         return Promise.reject(new Error(data.error.message));
       }
-      return data.result;
+
+      // Store the result
+      result = data.result;
+
+      // Get verification message and timestamp from response
+      const verificationMessage = data.result.verification;
+      const resTimestamp = data.result.timestamp;
+      // Verification message format depends on the value of timestamp:
+      // Timestamp is odd:  'bcrypt($resourceName + reverse($timestamp) + reverse($apiKey) + $timestamp)'
+      // Timestamp is even: 'bcrypt(reverse($resourceName) + $timestamp + $apiKey + reverse($timestamp))'
+      const resPlain =
+        resTimestamp & 1 ?
+        `${resourceName}${reverseString(resTimestamp.toString())}${reverseString(apiKey)}${resTimestamp}` :
+        `${reverseString(resourceName)}${resTimestamp}${apiKey}${reverseString(resTimestamp.toString())}`;
+
+      // Verify the verification message
+      return bcryptCompare(resPlain, verificationMessage);
+    })
+    .then((verified) => {
+      if (!verified) {
+        return Promise.reject(new Error('License not passed'));
+      }
+
+      return result;
     });
 }
