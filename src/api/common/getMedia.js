@@ -47,6 +47,8 @@ export default function getMedia(mediaId, quality, apiKey) {
 
   // Variable to store the result from response
   let result;
+  // Variable to store the date from response
+  let resTimestamp;
 
   return genBcryptSalt((BCRYPT_SALT_ROUND))
     // Bcrypt-Hash
@@ -67,7 +69,12 @@ export default function getMedia(mediaId, quality, apiKey) {
       });
     })
     // Convert the response to json
-    .then((res) => res.json())
+    .then((res) => {
+      // Get timestamp from response header
+      resTimestamp = parseInt(new Date(res.headers.get('X-Date')).getTime() / 1000, 10);
+      // Jsonify the response body
+      return res.json();
+    })
     // Return the result
     .then((data) => {
       if (data.error) {
@@ -77,9 +84,8 @@ export default function getMedia(mediaId, quality, apiKey) {
       // Store the result
       result = data.result;
 
-      // Get verification message and timestamp from response
+      // Get verification messagefrom response body
       const verificationMessage = data.result.verification;
-      const resTimestamp = data.result.timestamp;
       // Verification message format depends on the value of timestamp:
       // Timestamp is odd:  'bcrypt($resourceName + reverse($timestamp) + reverse($apiKey) + $timestamp)'
       // Timestamp is even: 'bcrypt(reverse($resourceName) + $timestamp + $apiKey + reverse($timestamp))'
