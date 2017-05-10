@@ -2,10 +2,11 @@
 
 import fetch from 'isomorphic-fetch';
 import isString from 'lodash/isString';
-import Promise from 'bluebird';
-import bcrypt from 'bcryptjs';
+import range from 'lodash/range';
+import bcrypt from 'external/bcrypt';
 
 import config from 'config';
+import { promisify } from 'lib/utils';
 
 // The URL root to request
 const FETCH_ROOT = config.fetchRoot;
@@ -14,11 +15,17 @@ const AUTH_MESSAGE_PREFIX = 'VERPIX ';
 // Parameters of bcrypt
 const BCRYPT_SALT_ROUND = 5;
 // Promisify the async functions
-const genBcryptSalt = Promise.promisify(bcrypt.genSalt);
-const bcryptHash = Promise.promisify(bcrypt.hash);
-const bcryptCompare = Promise.promisify(bcrypt.compare);
+const genBcryptSalt = promisify(bcrypt.genSalt);
+const bcryptHash = promisify(bcrypt.hash);
+const bcryptCompare = promisify(bcrypt.compare);
 
 const reverseString = (str) => str.split('').reverse().join('');
+
+// Set fallback for browsers that do not support Web Crypto API
+// 1073741824 = 2 ^ 30
+bcrypt.setRandomFallback((len) => (
+  range(0, len).map(() => Math.floor(Math.random() * 1073741824))
+));
 
 export default function getMedia(mediaId, quality, apiKey) {
   if (!isString(mediaId) || mediaId.length === 0) {
