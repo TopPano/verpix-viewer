@@ -1,6 +1,5 @@
 import fetch from 'isomorphic-fetch';
 import isString from 'lodash/isString';
-import Promise from 'bluebird';
 
 import config from 'config';
 

@@ -1,12 +1,14 @@
 import forEach from 'lodash/forEach';
-import merge from 'lodash/merge';
 
 import livephoto from './api/livephoto';
 
+import './polyfills';
+
 // Add api to global variable
-window.verpix = merge({}, window.verpix, {
-  createLivephoto: livephoto.create,
-});
+if (!window.verpix) {
+  window.verpix = {};
+}
+window.verpix.createLivephoto = livephoto.create;
 
 window.addEventListener('load', () => {
   // Create livephoto(s) from DOM elements

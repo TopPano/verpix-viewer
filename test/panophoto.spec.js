@@ -4,7 +4,7 @@ import range from 'lodash/range';
 import isDom from 'is-dom';
 import changeCase from 'change-case';
 import Promise from 'bluebird';
-import THREE from 'three';
+import { ImageLoader } from 'external/three';
 
 import create from 'api/panophoto/create';
 import config from 'config';
@@ -255,7 +255,7 @@ describe('panophoto/create()', () => {
     });
 
     // Stub the image loading method, replacing it by loading base64 image we provided
-    stubLoadImage = sinon.stub(THREE.ImageLoader.prototype, 'load').callsFake((url, onLoad) => {
+    stubLoadImage = sinon.stub(ImageLoader.prototype, 'load').callsFake((url, onLoad) => {
       const img = new Image();
 
       img.onload = () => {

@@ -16,26 +16,19 @@ const babelConfig = Object.assign({}, pkg.babel, {
 const config = {
   // Options affecting the normal modules
   module: {
-    preLoaders: [
-      {
-        test: /\.js?$/,
-        include: [
-          path.resolve(__dirname, '../src'),
-        ],
-        loader: 'isparta-instrumenter-loader',
-      },
+    rules: [
       {
         test: /\.js?$/,
         include: [
           path.resolve(__dirname, '../test'),
         ],
+        enforce: 'pre',
         loader: 'eslint-loader',
       },
-    ],
-    loaders: [
       {
         test: /\.js?$/,
         include: [
+          path.resolve(__dirname, '../src'),
           path.resolve(__dirname, '../test'),
           path.resolve(__dirname, '../config'),
         ],

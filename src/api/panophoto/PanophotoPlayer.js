@@ -1,6 +1,17 @@
 /* eslint-disable no-param-reassign */
 
-import THREE from 'three';
+import {
+  PerspectiveCamera,
+  Scene,
+  WebGLRenderer,
+  TextureLoader,
+  LinearFilter,
+  SphereGeometry,
+  Matrix4,
+  MeshBasicMaterial,
+  Mesh,
+  Vector3,
+} from 'external/three';
 import clamp from 'lodash/clamp';
 import fill from 'lodash/fill';
 import now from 'lodash/now';
@@ -45,6 +56,8 @@ const AUTO_PLAY = {
 };
 
 const HIDE_STARTED_BRAND_ROTATION_THRESHOLD = 0.1;
+
+const degToRad = (degrees) => degrees * (Math.PI / 180);
 
 export default class PanophotoPlayer {
   constructor(params) {
@@ -348,7 +361,7 @@ export default class PanophotoPlayer {
 
   // Setup (perspective) camera
   setupCamera() {
-    this.camera.instance = new THREE.PerspectiveCamera(
+    this.camera.instance = new PerspectiveCamera(
       Math.round((PARAMS_DEFAULT.FOV_MIN + PARAMS_DEFAULT.FOV_MAX) / 2), // field of view (vertical)
       this.dimension.width / this.dimension.height, // aspect ratio
       0.1, // near plane
@@ -358,7 +371,7 @@ export default class PanophotoPlayer {
 
   // Setup scene for rendering
   setupScene() {
-    this.scene = new THREE.Scene();
+    this.scene = new Scene();
   }
 
   // Setup renderer object
@@ -371,7 +384,7 @@ export default class PanophotoPlayer {
     };
 
     // TODO: Use CanvasRenderer for browser without WebGL support
-    this.renderer = new THREE.WebGLRenderer(webGLRendererParams);
+    this.renderer = new WebGLRenderer(webGLRendererParams);
     this.renderer.setClearColor(0x000000, 1);
     this.renderer.autoClear = false;
     // this.renderer.autoClearColor = false;
@@ -383,14 +396,14 @@ export default class PanophotoPlayer {
 
   // Generate textrues from images.
   buildScene(imgs, onSuccess, onFailure) {
-    const loader = new THREE.TextureLoader();
+    const loader = new TextureLoader();
     let count = 0;
 
     loader.crossOrigin = '';
     imgs.forEach((img, index) => {
       loader.load(img, (texture) => {
         // TODO: How to pass the no-param-reassign rule from eslint ?
-        texture.minFilter = THREE.LinearFilter;
+        texture.minFilter = LinearFilter;
         this.addMesh(texture, index, imgs.length);
         count++;
         if (count === imgs.length) {
@@ -414,7 +427,7 @@ export default class PanophotoPlayer {
     const j = parseInt(index / divisor, 10);
     const horizontalLength = (Math.PI * 2) / divisor;
     const verticalLength = (totalTiles > 1) ? ((Math.PI * 2) / divisor) : Math.PI;
-    const geometry = new THREE.SphereGeometry(
+    const geometry = new SphereGeometry(
       SPHERE_RADIUS, // sphere radius
       50, // # of horizontal segments
       50, // # of vertical segments
@@ -423,14 +436,14 @@ export default class PanophotoPlayer {
       verticalLength * j, // vertical starting angle
       verticalLength // vertical sweep angle size
     );
-    geometry.applyMatrix(new THREE.Matrix4().makeScale(-1, 1, 1));
-    const material = new THREE.MeshBasicMaterial({
+    geometry.applyMatrix(new Matrix4().makeScale(-1, 1, 1));
+    const material = new MeshBasicMaterial({
       map: texture,
       overdraw: true,
       transparent: true,
       opacity: DIMMED_OPACITY,
     });
-    const mesh = new THREE.Mesh(geometry, material);
+    const mesh = new Mesh(geometry, material);
 
     this.materials.push(material);
     this.scene.add(mesh);
@@ -525,11 +538,11 @@ export default class PanophotoPlayer {
     this.camera.lat = clamp(newLat, LAT_MIN, LAT_MAX);
 
     // Get theta (from longitude) and phi (from latitude)
-    const theta = THREE.Math.degToRad(this.camera.lng);
-    const phi = THREE.Math.degToRad(90 - this.camera.lat);
+    const theta = degToRad(this.camera.lng);
+    const phi = degToRad(90 - this.camera.lat);
 
     // Change look position of camera
-    const target = new THREE.Vector3(
+    const target = new Vector3(
       Math.sin(phi) * Math.cos(theta), // x
       Math.cos(phi), // y
       Math.sin(phi) * Math.sin(theta) // z
