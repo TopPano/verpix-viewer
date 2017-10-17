@@ -57,11 +57,41 @@ verpix.createPanophoto(el, {}, (err, instance) => {
   }
 });
 ```
-
 ### livephoto
 
+You can run livephoto via html and javascript, detailed usage is shown in [Livephoto API](#livephoto-api) section.
+
+#### html
+
+The library automatically takes all html elements whose class are *verpix-livephoto* and run livephoto on them.
+
+```html
+<div class="verpix-livephoto" data-id="ac4896d4daf9f400" data-width="280" data-height="500"></div>
+```
+
+#### javascript
+
 ```javascript
-// TODO: Usage for livephoto
+// Create the DOM element that will show livephoto
+const el = document.createElement('DIV');
+
+// Set parameters
+el.setAttribute('data-id', 'ac4896d4daf9f400');
+el.setAttribute('data-width', 280);
+el.setAttribute('data-height', 300);
+
+// Create livephoto
+verpix.createLivephoto(el, {}, (err, instance) => {
+  if (err) {
+    // Some errors occur while creating, print it
+    console.error(err);
+  } else {
+    // Append the livephoto on body
+    document.body.appendChild(instance.root);
+    // Start playing livephoto
+    instance.start();
+  }
+});
 ```
 
 ## <a name="panophoto-api"></a>Panophoto API
