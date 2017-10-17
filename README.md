@@ -57,11 +57,41 @@ verpix.createPanophoto(el, {}, (err, instance) => {
   }
 });
 ```
-
 ### livephoto
 
+You can run livephoto via html and javascript, detailed usage is shown in [Livephoto API](#livephoto-api) section.
+
+#### html
+
+The library automatically takes all html elements whose class are *verpix-livephoto* and run livephoto on them.
+
+```html
+<div class="verpix-livephoto" data-id="ac4896d4daf9f400" data-width="280" data-height="500"></div>
+```
+
+#### javascript
+
 ```javascript
-// TODO: Usage for livephoto
+// Create the DOM element that will show livephoto
+const el = document.createElement('DIV');
+
+// Set parameters
+el.setAttribute('data-id', 'ac4896d4daf9f400');
+el.setAttribute('data-width', 280);
+el.setAttribute('data-height', 500);
+
+// Create livephoto
+verpix.createLivephoto(el, {}, (err, instance) => {
+  if (err) {
+    // Some errors occur while creating, print it
+    console.error(err);
+  } else {
+    // Append the livephoto on body
+    document.body.appendChild(instance.root);
+    // Start playing livephoto
+    instance.start();
+  }
+});
 ```
 
 ## <a name="panophoto-api"></a>Panophoto API
@@ -265,9 +295,140 @@ Note that when specifying these parameters as data-attributes, you should conver
 
 ## <a name="livephoto-api"></a>Livephoto API
 
-```javascript
-// TODO: API for livephoto
-```
+You can run livephoto via html and javascript.
+
+### Via html
+
+To run livephoto via html, you just need html elements whose class are *verpix-livephoto*. To parameterize, you should set the parameter value to html attribute `data-*`, such as `data-width="500"`. [Parameters](#livephoto-params) section shows all available parameters.
+
+### Via javascript
+
+To run livephoto via javascript, call `verpix.createLivephoto`.
+
+#### verpix.createLivephoto(source, params, callback(err, instance))
+
+- **_source_**: One of following types
+  - *type 0*: a *DOM element* that you want to show livephoto
+  - *type 1*: a *string* that is a media ID you have posted in [Verpix](https://www.verpix.me)
+  - *type 2*: an *array of string* that each string is an URL of image
+  - *type 3*: an *arry of ImageData* that each string is an [ImageData](https://developer.mozilla.org/en-US/docs/Web/API/ImageData) instance
+- **_params_**: An *object* that fills parameters, only used for *type 1*, *type 2* and *type 3*. *Type 0* is parameterized by setting attribute of `data-*`. [Parameters](#panophoto-params) section shows all available parameters.
+- **_callback(err, instance)_**: An *function* that will be executed after creating.
+  - *err*: An *Error object* if some errors occur while creating, and *null* if no error.
+  - *instance*: An *object* that contains the livephoto DOM element and methods to manipulate it if *err* is *null*. If *err* is not *null*, *instance* will be *null*.
+
+#### instance when error is null
+
+You will get an DOM element that can display livephoto and methods to manipulate it.
+
+<table class="table table-bordered table-striped">
+  <thead>
+		<tr>
+			<th style="width: 100px;">Name</th>
+      <th style="width: 100px;">Return</th>
+			<th>Description</th>
+		</tr>
+	</thead>
+		<tr>
+			<td>root</td>
+      <td></td>
+			<td>The dom element that displays livephoto.</td>
+		</tr>
+		<tr>
+			<td>start()</td>
+      <td></td>
+			<td>Start playing livephoto.</td>
+		</tr>
+		<tr>
+			<td>stop()</td>
+      <td></td>
+			<td>Stop playing livephoto.</td>
+		</tr>
+    <tr>
+			<td>getOriginalDimension()</td>
+      <td>{ width: number, height: number }</td>
+			<td>Get the width and height of original photos.</td>
+		</tr>
+    <tr>
+			<td>setPhotos(array[Image|ImageData])</td>
+      <td></td>
+			<td>Replace current photos to new ones. Each of the array is an instance of Image or ImageData.</td>
+		</tr>
+    <tr>
+      <td>setWrapperDimension({ width: number, height: number })</td>
+			<td></td>
+			<td>Change the visible wrapper size.</td>
+		</tr>
+  <tbody>
+  </tbody>
+</table>
+
+
+### <a name="livephoto-params">Parameters
+
+Parameters can be passed via data attributes for html and *type 0*, and via *params* for *type 1*, *type 2* and *type 3*. For data attributes, append the parameter name to `data-`, such as `data-width="500"`.
+
+Note that when specifying these parameters as data-attributes, you should convert *camelCased* names into *dash-separated lower-case* names (e.g. `cutBased` would be `data-cut-based`, and `disableCDN` would be `data-disable-cdn`).
+
+<table class="table table-bordered table-striped">
+	<thead>
+		<tr>
+			<th style="width: 100px;">Name</th>
+			<th style="width: 100px;">type</th>
+			<th style="width: 50px;">default</th>
+			<th>description</th>
+		</tr>
+	</thead>
+  <tbody>
+		<tr>
+			<td>id</td>
+			<td>string</td>
+			<td>required</td>
+			<td>The media id you want to specify. Only used in html and type 0.</td>
+		</tr>
+		<tr>
+			<td>width</td>
+			<td>number</td>
+			<td>auto</td>
+			<td rowspan="2">The visible width/height of livephoto. For html, type 0 and 1, the default width/height depends on the video you uploaded on Verpix. For type 2 and 3, the default width/height depends on the first photo you given.</td>
+		</tr>
+    <tr>
+			<td>height</td>
+			<td>number</td>
+			<td>auto</td>
+		</tr>
+    <tr>
+			<td>cutBased</td>
+			<td>string</td>
+			<td>'height'</td>
+			<td>Decide how to cut off the visible region. If it is 'width', the cut region depends on width. if it is 'height', the cut region depends on height.</td>
+		</tr>
+		<tr>
+			<td>action</td>
+			<td>string</td>
+			<td>'horizontal'</td>
+			<td>The motion direction to play livephoto. The parameter can be 'horizontal' or 'vertical' and only works for type 2 and 3. For html, type0 and 1, the direction is always 'horizontal'.</td>
+		</tr>
+    <tr>
+			<td>loopMediaIcon</td>
+			<td>boolean</td>
+			<td>false</td>
+			<td>In autoplay mode, show an 360 icon or not. This parameters is taken only when autoplay is true.</td>
+		</tr>
+		<tr>
+			<td>disableCDN</td>
+			<td>boolean</td>
+			<td>false</td>
+			<td>Load livephoto from CDN or not. The parameter is used only in html, type 0 and 1.</td>
+		</tr>
+		<tr>
+			<td>disableGA</td>
+			<td>boolean</td>
+			<td>false</td>
+			<td>Send a Google Analytics event or not.</td>
+		</tr>
+  </tbody>
+</table>
 
 ## Development and Build
 
