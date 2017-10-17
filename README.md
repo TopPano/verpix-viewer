@@ -47,7 +47,7 @@ el.setAttribute('data-height', 300);
 // Create panophoto
 verpix.createPanophoto(el, {}, (err, instance) => {
   if (err) {
-    // Something erro while creating, print it
+    // Some errors occur while creating, print it
     console.error(err);
   } else {
     // Append the panophoto on body
@@ -295,7 +295,7 @@ npm install
 
 ### Development
 
-Run in development mode and hot re-building library when you modify source files.
+Run in development mode that will hot re-build the library when you modify source files.
 
 ```bash
 npm start
