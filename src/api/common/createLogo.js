@@ -2,6 +2,7 @@ import MutationObserver from 'mutation-observer';
 import isString from 'lodash/isString';
 
 import config from 'config';
+import { applyFixedSizeStyle } from 'lib/dom';
 import { execute } from 'lib/utils';
 
 export default function createLogo(params = {}) {
@@ -25,12 +26,10 @@ export default function createLogo(params = {}) {
   // Attributes for image
   if (isCustomLogo) {
     img.src = params.logo;
-    img.width = 30;
-    img.height = 30;
+    applyFixedSizeStyle(img, 30, 30);
   } else {
     img.src = `${config.staticRoot}/assets/logo.svg`;
-    img.width = 90;
-    img.height = 13;
+    applyFixedSizeStyle(img, 90, 13);
   }
 
   // Append child

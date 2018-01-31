@@ -1,4 +1,7 @@
-import { applyStyle } from 'lib/dom';
+import {
+  applyFixedSizeStyle,
+  applyStyle,
+} from 'lib/dom';
 import config from 'config';
 
 export default function createBrand() {
@@ -6,8 +9,7 @@ export default function createBrand() {
 
   // Attributes for brand
   brand.src = `${config.staticRoot}/assets/brand-pano.svg`;
-  brand.width = 70;
-  brand.height = 70;
+  applyFixedSizeStyle(brand, 70, 70);
   brand.style.position = 'absolute';
   brand.style.left = '50%';
   brand.style.bottom = '50%';
