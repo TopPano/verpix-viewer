@@ -1,24 +1,23 @@
 import range from 'lodash/range';
 
-export default function constructPhotoUrls(
-  mediaId,
-  mediaObj,
-  visibleWidth,
-  visibleHeight,
-  isCDNDisabled = false
-) {
+export default function constructPhotoUrls(mediaObj, isCDNDisabled = false) {
+  const {
+    sid,
+    content,
+  } = mediaObj;
   const {
     cdnUrl,
     storeUrl,
     quality,
     shardingKey,
-  } = mediaObj.content;
+  } = content;
   const storeRoot = isCDNDisabled ? storeUrl : cdnUrl;
-  // TODO: More rules to choose the best quality
-  const selectedIdx = (Math.max(visibleWidth, visibleHeight) <= 300) ? quality.length - 1 : 0;
-  const selectedQuality = quality[selectedIdx];
+  const {
+    size,
+    tiles,
+  } = quality[0];
 
-  return range(0, selectedQuality.tiles).map((idx) => (
-    `${storeRoot}${shardingKey}/media/${mediaId}/pano/${selectedQuality.size}/${idx}.jpg`
+  return range(0, tiles).map((idx) => (
+    `${storeRoot}${shardingKey}/media/${sid}/pano/${size}/${idx}.jpg`
   ));
 }

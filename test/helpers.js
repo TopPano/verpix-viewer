@@ -89,18 +89,16 @@ export function execute(callback, ...args) {
 }
 
 // Set response of a Sinon FakeServer
-export function setResponse(server, {
-  method = 'GET',
-  url,
-  status = 200,
-  header = { 'Content-Type': 'application/json' },
-  body = JSON.stringify({}),
-}) {
-  server.respondWith(method, url, [
-    status,
-    header,
-    body,
-  ]);
+export function setResponse(server, url, method, res) {
+  server.respondWith(method, url, (xhr) => {
+    const result = isFunction(res) ? res(xhr) : res;
+
+    xhr.respond(
+      result.status || 200,
+      result.header || { 'Content-Type': 'application/json' },
+      result.body || JSON.stringify({})
+    );
+  });
 }
 
 // Create a DOM event
